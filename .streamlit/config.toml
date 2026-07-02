@@ -1,0 +1,6 @@
+[theme]
+primaryColor = "#FF3366"         # Vibrant alert coral accent
+backgroundColor = "#0E1117"      # Deep matte dark canvas
+secondaryBackgroundColor = "#1C2130" # Clean slate gray for the sidebar card surface
+textColor = "#E2E8F0"            # Crisp off-white typography
+font = "sans"                   # Professional, clean geometric sans-serif font
