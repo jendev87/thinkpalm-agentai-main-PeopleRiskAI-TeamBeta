@@ -950,15 +950,71 @@ def render_dashboard(col_dash, df, slack_url, smtp_host, smtp_port, smtp_user, s
                 st.markdown("<p style='color: #94A3B8; font-size: 0.9rem; margin-bottom: 24px;'>Real-time insights and predictive flight risk metrics.</p>", unsafe_allow_html=True)
                 
                 # Toolbar
-                tb_col1, tb_col2, tb_col3, tb_col4 = st.columns([0.4, 0.2, 0.2, 0.2])
+                tb_col1, tb_col2, tb_col3, tb_col4 = st.columns([4, 1.2, 1.8, 1.2], gap="small")
                 with tb_col1:
-                    st.text_input("Search employees...", placeholder="🔍 Search...", label_visibility="collapsed")
+                    st.text_input("Search...", label_visibility="collapsed", placeholder="🔍 Search employee database...", key="dash_search")
                 with tb_col2:
-                    st.button("Filters", icon=":material/filter_list:", use_container_width=True, key="tb_filter")
+                    st.button("🎛 Filters", use_container_width=True)
                 with tb_col3:
-                    st.button("Export", icon=":material/download:", use_container_width=True, key="tb_export")
+                    with st.popover("📥 Ingest Roster Data", use_container_width=True):
+                        st.markdown("### **Upload Fresh HR Records**")
+                        st.markdown("<p style='color: #64748B; font-size: 0.85rem;'>Select a CSV or Excel file to update the platform core analytics database schema.</p>", unsafe_allow_html=True)
+                        uploaded_file = st.file_uploader("Choose file", type=["csv", "xlsx"], label_visibility="collapsed")
+                        
+                        if uploaded_file is not None:
+                            file_key = f"{uploaded_file.name}_{uploaded_file.size}"
+                            if st.session_state.get("last_uploaded") != file_key:
+                                try:
+                                    if uploaded_file.name.endswith('.csv'):
+                                        new_df = pd.read_csv(uploaded_file)
+                                    else:
+                                        new_df = pd.read_excel(uploaded_file)
+                                    
+                                    with st.spinner("Syncing to core database..."):
+                                        project_root = Path(__file__).parent.parent.parent
+                                        db_path = project_root / 'hr_data.db'
+                                        with sqlite3.connect(db_path) as conn:
+                                            core_cols = ['EmployeeID', 'Tenure', 'Department', 'Role', 'MonthlyHours', 'LastPromotion', 'Salary', 'Attrition']
+                                            emp_df = new_df[[c for c in core_cols if c in new_df.columns]]
+                                            emp_df.to_sql('employees', conn, if_exists='replace', index=False)
+                                            
+                                            ml_cols = ['EmployeeID', 'RiskPercentage', 'Driver1', 'Driver2', 'Driver3']
+                                            if 'RiskPercentage' in new_df.columns:
+                                                ml_df = new_df[[c for c in ml_cols if c in new_df.columns]]
+                                                ml_df.to_sql('attrition_scores', conn, if_exists='replace', index=False)
+                                        
+                                        # Clear cache for the export PDF function
+                                        st.cache_data.clear()
+                                        
+                                    st.session_state.last_uploaded = file_key
+                                    st.success("Database synced successfully! 🚀")
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error(f"Failed to ingest data: {e}")
+                            else:
+                                st.success("Database synced successfully! 🚀")
+                
                 with tb_col4:
-                    st.button("Refresh", icon=":material/refresh:", use_container_width=True, key="tb_refresh")
+                    @st.cache_data(show_spinner=False)
+                    def get_cached_pdf(current_df):
+                        def get_top_driver(series):
+                            return series.mode()[0] if not series.mode().empty else "N/A"
+                        
+                        metrics = current_df.groupby('Department').agg(
+                            Average_Risk=('RiskPercentage', 'mean'),
+                            High_Risk_Count=('RiskPercentage', lambda x: (x > 75).sum()),
+                            Top_Driver=('Driver1', get_top_driver)
+                        ).reset_index()
+                        metrics['Average_Risk'] = metrics['Average_Risk'].round(1)
+                        highest = metrics.loc[metrics['Average_Risk'].idxmax()]
+                        inf_text = (f"The **{highest['Department']}** segment displays disproportionate "
+                                    f"risk exposure (Avg: {highest['Average_Risk']}%), driven primarily by "
+                                    f"{highest['Top_Driver']}. We recommend immediate qualitative assessments "
+                                    f"for the {highest['High_Risk_Count']} high-risk individuals.")
+                        return generate_executive_pdf(metrics, inf_text)
+                    
+                    pdf_data = get_cached_pdf(df)
+                    st.download_button("📤 Export", data=pdf_data, file_name="dashboard_export.pdf", mime="application/pdf", use_container_width=True, key="tb_export")
                 
                 st.markdown("<div style='margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.05);'></div>", unsafe_allow_html=True)
 
