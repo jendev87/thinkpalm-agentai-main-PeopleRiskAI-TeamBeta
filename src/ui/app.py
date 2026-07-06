@@ -19,7 +19,7 @@ from src.automation.notifier import send_manager_email
 from src.automation.slack import dispatch_critical_alert
 from src.automation.report_engine import generate_executive_pdf
 
-st.set_page_config(page_title="PeopleRisk AI", page_icon="🎯", layout="wide")
+st.set_page_config(page_title="PeopleRisk AI", page_icon="🎯", layout="wide", initial_sidebar_state="expanded")
 
 import uuid
 if "threads" not in st.session_state:
@@ -104,16 +104,87 @@ def render_header():
     .block-container {
         padding-left: 0px !important;
         padding-right: 0px !important;
-        padding-top: var(--header-height) !important;
+        padding-top: 24px !important;
         padding-bottom: 0 !important;
         max-width: 100% !important;
     }
 
+    /* ========================================== */
+    /* 3. SIDEBAR REDESIGN (PERMANENTLY OPEN) */
+    /* ========================================== */
     [data-testid="stSidebar"] {
-        min-width: 240px !important;
-        max-width: 240px !important;
-        background-color: #0B0E14 !important;
-        border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
+        min-width: 226px !important;
+        max-width: 226px !important;
+        background-color: #111827 !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.03) !important;
+        transform: translateX(0px) !important;
+        margin-left: 0px !important;
+        position: relative !important;
+        visibility: visible !important;
+        display: block !important;
+    }
+    
+    [data-testid="collapsedControl"] {
+        display: none !important;
+    }
+    
+    .stApp [data-testid="stSidebar"] button[kind="secondary"][data-testid="stBaseButton-secondary"],
+    .stApp [data-testid="stSidebar"] button[kind="primary"][data-testid="stBaseButton-primary"] {
+        background-color: transparent !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        outline: none !important;
+        border-radius: 6px !important;
+        padding: 8px 12px !important;
+        justify-content: flex-start !important;
+        text-align: left !important;
+        color: #94A3B8 !important;
+        font-weight: 500 !important;
+        font-size: 0.85rem !important;
+        transition: background 0.15s ease, color 0.15s ease !important;
+        height: auto !important;
+        min-height: 0 !important;
+        margin-bottom: 2px !important;
+        white-space: nowrap !important;
+    }
+    
+    .stApp [data-testid="stSidebar"] button[kind="secondary"][data-testid="stBaseButton-secondary"] *,
+    .stApp [data-testid="stSidebar"] button[kind="primary"][data-testid="stBaseButton-primary"] * {
+        white-space: nowrap !important;
+        border: none !important;
+        box-shadow: none !important;
+        outline: none !important;
+    }
+    
+    .stApp [data-testid="stSidebar"] button[kind="secondary"][data-testid="stBaseButton-secondary"]:hover {
+        background-color: rgba(255, 255, 255, 0.04) !important;
+        background: rgba(255, 255, 255, 0.04) !important;
+    }
+    
+    .stApp [data-testid="stSidebar"] button[kind="primary"][data-testid="stBaseButton-primary"] {
+        color: #F8FAFC !important;
+        background-color: rgba(37, 99, 235, 0.15) !important;
+        background: rgba(37, 99, 235, 0.15) !important;
+        box-shadow: inset 3px 0 0 0 #3B82F6 !important;
+    }
+    
+    @keyframes fadeUp {
+        0% { opacity: 0; transform: translateY(10px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+    .kpi-card {
+        animation: fadeUp 0.4s ease-out forwards;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease !important;
+    }
+    .kpi-card:hover {
+        transform: translateY(-4px) !important;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7) !important;
+        filter: brightness(1.05);
+    }
+    
+    [data-testid="stSidebar"] p {
+        margin: 0 !important;
     }
 
     /* Give both columns a strict fixed height relative to viewport */
@@ -138,7 +209,7 @@ def render_header():
         height: 100% !important;
         overflow-y: auto !important;
         overflow-x: hidden !important;
-        padding: 32px 40px !important;
+        padding: 12px 40px 32px 40px !important;
         gap: 24px !important;
     }
 
@@ -430,28 +501,53 @@ def render_header():
 
 def render_sidebar(col_nav):
     with col_nav:
-        with st.container(border=False):
-            st.markdown("<h3 style='color: #FFFFFF; margin-bottom: 20px;'>Navigation</h3>", unsafe_allow_html=True)
+        # 1. Main Branding
+        st.markdown('''
+            <div style="padding: 10px 0 24px 0;">
+                <h2 style="margin: 0; padding: 0; font-size: 1.3rem; color: #FFFFFF; letter-spacing: -0.02em;">🎯 PeopleRisk AI</h2>
+                <p style="margin: 0; padding: 0; color: #94A3B8; font-size: 0.75rem; font-weight: 500;">Enterprise HR Intelligence</p>
+            </div>
+        ''', unsafe_allow_html=True)
 
-            # Render vertical workspace links
-            if st.button("📊 Risk Overview", use_container_width=True):
-                st.session_state.active_navigation = "📊 Risk Overview"
+        current_nav = st.session_state.get("active_navigation", "📊 Risk Overview")
+
+        def nav_button(label, icon, target_state):
+            is_active = (current_nav == target_state)
+            btn_type = "primary" if is_active else "secondary"
+            if st.button(label, icon=icon, key=f"nav_{label}", type=btn_type, use_container_width=True):
+                st.session_state.active_navigation = target_state
                 st.rerun()
-            if st.button("🎯 Top Drivers", use_container_width=True):
-                st.session_state.active_navigation = "🎯 Top Drivers"
-                st.rerun()
-            if st.button("📋 High Risk Roster", use_container_width=True):
-                st.session_state.active_navigation = "📋 High Risk Roster"
-                st.rerun()
-            if st.button("⚙️ Executive Summary", use_container_width=True):
-                st.session_state.active_navigation = "⚙️ Executive Summary"
-                st.rerun()
-            if st.button("⚙️ Configuration", use_container_width=True):
-                st.session_state.active_navigation = "⚙️ Configuration"
-                st.rerun()
+
+        # 2. Analytics Section
+        st.markdown("<p style='color: #64748B; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; margin-top: 16px;'>Analytics</p>", unsafe_allow_html=True)
+        nav_button("Risk Overview", ":material/bar_chart:", "📊 Risk Overview")
+        nav_button("Top Drivers", ":material/trending_up:", "🎯 Top Drivers")
+        nav_button("High Risk Roster", ":material/group:", "📋 High Risk Roster")
+        nav_button("Executive Summary", ":material/description:", "⚙️ Executive Summary")
+
+        # 3. System Section
+        st.markdown("<p style='color: #64748B; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; margin-top: 24px;'>System</p>", unsafe_allow_html=True)
+        nav_button("Configuration", ":material/settings:", "⚙️ Configuration")
+        
+        # 4. Bottom Utility Section
+        st.markdown('''
+            <div style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 24px; margin-top: auto; display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 32px; height: 32px; border-radius: 50%; background: #1E293B; display: flex; align-items: center; justify-content: center; color: #94A3B8;">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    </div>
+                    <div>
+                        <p style="margin: 0; font-size: 0.8rem; color: #F8FAFC; font-weight: 600;">HR Administrator</p>
+                        <p style="margin: 0; font-size: 0.65rem; color: #64748B;">Enterprise Edition</p>
+                    </div>
+                </div>
+                <div style="color: #64748B; cursor: pointer;">
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"></path></svg>
+                </div>
+            </div>
+        ''', unsafe_allow_html=True)
 
 def render_risk_overview(df):
-    st.markdown("#### **Core KPIs**")
     kpi_col1, kpi_col2, kpi_col3 = st.columns(3)
     total_emp = len(df)
     high_risk = len(df[df['RiskPercentage'] > 75])
@@ -459,7 +555,7 @@ def render_risk_overview(df):
 
     # Column 1 Example (Total Employees)
     kpi_col1.markdown(f'''
-    <div style="
+    <div class="kpi-card" style="
         background: linear-gradient(145deg, rgba(17, 24, 39, 0.7) 0%, rgba(11, 14, 20, 0.9) 100%);
         backdrop-filter: blur(20px);
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
@@ -487,7 +583,7 @@ def render_risk_overview(df):
 
     # Column 2 Example (High Flight Risk)
     kpi_col2.markdown(f'''
-    <div style="
+    <div class="kpi-card" style="
         background: linear-gradient(145deg, rgba(17, 24, 39, 0.7) 0%, rgba(11, 14, 20, 0.9) 100%);
         backdrop-filter: blur(20px);
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
@@ -516,7 +612,7 @@ def render_risk_overview(df):
 
     # Column 3 Example (Average Risk Score)
     kpi_col3.markdown(f'''
-    <div style="
+    <div class="kpi-card" style="
         background: linear-gradient(145deg, rgba(17, 24, 39, 0.7) 0%, rgba(11, 14, 20, 0.9) 100%);
         backdrop-filter: blur(20px);
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
@@ -549,7 +645,7 @@ def render_risk_overview(df):
     labels = ['Low', 'Medium', 'High', 'Critical']
     df['RiskStratification'] = pd.cut(df['RiskPercentage'], bins=bins, labels=labels, include_lowest=True)
 
-    st.markdown("#### **Comprehensive Risk Insights**")
+    st.markdown("#### **Risk Insights**")
     
     # -----------------------------
     # Information Hierarchy: Tabs
@@ -560,9 +656,11 @@ def render_risk_overview(df):
     chart_layout = dict(
         plot_bgcolor='rgba(0,0,0,0)', 
         paper_bgcolor='rgba(0,0,0,0)',
-        font=dict(family='Outfit', color='#94A3B8'),
-        xaxis=dict(showgrid=False, zeroline=False, showline=False, color='#475569'),
-        yaxis=dict(showgrid=True, gridcolor='rgba(255,255,255,0.05)', zeroline=False, showline=False, color='#475569')
+        font=dict(family='Outfit', color='#64748B'),
+        title_font=dict(size=18, color='#F8FAFC', family='Outfit'),
+        xaxis=dict(showgrid=False, zeroline=False, showline=False, color='#475569', title_font=dict(size=12, color='#64748B')),
+        yaxis=dict(showgrid=True, gridcolor='rgba(255,255,255,0.02)', zeroline=False, showline=False, color='#475569', title_font=dict(size=12, color='#64748B')),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, font=dict(color='#94A3B8'))
     )
 
     with tab1:
@@ -576,8 +674,8 @@ def render_risk_overview(df):
                                    color_discrete_sequence=['#3B82F6'],
                                    template='plotly_dark')
                 # Spline smoothing & gradient styling
-                fig_area.update_traces(line_shape='spline', fillcolor='rgba(59, 130, 246, 0.2)', line=dict(width=3))
-                fig_area.update_layout(**chart_layout, height=350, margin=dict(l=20, r=20, t=50, b=20))
+                fig_area.update_traces(line_shape='spline', fillcolor='rgba(59, 130, 246, 0.2)', line=dict(width=4))
+                fig_area.update_layout(**chart_layout, height=420, margin=dict(l=30, r=30, t=70, b=30))
                 st.plotly_chart(fig_area, use_container_width=True)
 
         with row1_col2:
@@ -588,8 +686,8 @@ def render_risk_overview(df):
                                    title='Avg Risk Trend vs Monthly Hours',
                                    color_discrete_sequence=['#F43F5E'],
                                    template='plotly_dark')
-                fig_line.update_traces(line_shape='spline', line=dict(width=3))
-                fig_line.update_layout(**chart_layout, height=350, margin=dict(l=20, r=20, t=50, b=20))
+                fig_line.update_traces(line_shape='spline', line=dict(width=4))
+                fig_line.update_layout(**chart_layout, height=420, margin=dict(l=30, r=30, t=70, b=30))
                 st.plotly_chart(fig_line, use_container_width=True)
 
     with tab2:
@@ -607,7 +705,7 @@ def render_risk_overview(df):
                 fig_donut.update_layout(
                     plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
                     font=dict(family='Outfit', color='#94A3B8'),
-                    showlegend=False, height=350, margin=dict(l=20, r=20, t=50, b=20),
+                    showlegend=False, height=420, margin=dict(l=30, r=30, t=70, b=30),
                     annotations=[dict(text='Risk', x=0.5, y=0.5, font_size=24, showarrow=False, font_color='#FFFFFF')]
                 )
                 fig_donut.update_traces(textposition='outside', textinfo='percent+label')
@@ -630,7 +728,7 @@ def render_risk_overview(df):
                                         color_discrete_sequence=['#8B5CF6'],
                                         template='plotly_dark')
                 fig_hist.update_traces(marker=dict(line=dict(width=0)))
-                fig_hist.update_layout(**chart_layout, height=350, margin=dict(l=20, r=20, t=50, b=20), bargap=0.1)
+                fig_hist.update_layout(**chart_layout, height=420, margin=dict(l=30, r=30, t=70, b=30), bargap=0.1)
                 st.plotly_chart(fig_hist, use_container_width=True)
 
     with tab3:
@@ -648,7 +746,7 @@ def render_risk_overview(df):
                 fig_heat.update_layout(
                     plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
                     font=dict(family='Outfit', color='#94A3B8'),
-                    height=400, margin=dict(l=20, r=20, t=50, b=20)
+                    height=420, margin=dict(l=30, r=30, t=70, b=30)
                 )
                 fig_heat.update_xaxes(showgrid=False)
                 fig_heat.update_yaxes(showgrid=False)
@@ -671,7 +769,7 @@ def render_risk_overview(df):
                 fig_parallel.update_layout(
                     plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
                     font=dict(family='Outfit', color='#94A3B8'),
-                    height=400, margin=dict(l=20, r=20, t=50, b=20)
+                    height=420, margin=dict(l=30, r=30, t=70, b=30)
                 )
                 st.plotly_chart(fig_parallel, use_container_width=True)
 
@@ -848,8 +946,21 @@ def render_dashboard(col_dash, df, slack_url, smtp_host, smtp_port, smtp_user, s
     with col_dash:
         with st.container(border=False):
                 st.markdown('<div style="padding-right: 20px;">', unsafe_allow_html=True)
-                st.markdown("### **Organizational Risk Dashboard**")
-                st.markdown("*Real-time insights and predictive flight risk metrics.*")
+                st.markdown("## **Organizational Risk Dashboard**")
+                st.markdown("<p style='color: #94A3B8; font-size: 0.9rem; margin-bottom: 24px;'>Real-time insights and predictive flight risk metrics.</p>", unsafe_allow_html=True)
+                
+                # Toolbar
+                tb_col1, tb_col2, tb_col3, tb_col4 = st.columns([0.4, 0.2, 0.2, 0.2])
+                with tb_col1:
+                    st.text_input("Search employees...", placeholder="🔍 Search...", label_visibility="collapsed")
+                with tb_col2:
+                    st.button("Filters", icon=":material/filter_list:", use_container_width=True, key="tb_filter")
+                with tb_col3:
+                    st.button("Export", icon=":material/download:", use_container_width=True, key="tb_export")
+                with tb_col4:
+                    st.button("Refresh", icon=":material/refresh:", use_container_width=True, key="tb_refresh")
+                
+                st.markdown("<div style='margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.05);'></div>", unsafe_allow_html=True)
 
                 if "active_navigation" not in st.session_state:
                     st.session_state.active_navigation = "📊 Risk Overview"
@@ -1113,16 +1224,6 @@ def load_risk_data():
 
 def main():
     render_header()
-    
-    # Render the actual header title as a fixed HTML block
-    st.markdown('''
-    <div style="position: fixed; top: 0; left: 0; right: 0; height: 70px; background: rgba(11, 14, 20, 0.85); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255, 255, 255, 0.05); z-index: 999999; display: flex; align-items: center; padding: 0 32px;">
-        <div>
-            <h1 style="margin: 0; padding: 0; font-size: 1.4rem; color: #FFFFFF; letter-spacing: -0.02em;">🎯 PeopleRisk AI Workspace</h1>
-            <p style="margin: 0; padding: 0; color: #94A3B8; font-size: 0.8rem; font-weight: 500;">Enterprise HR Attrition Prediction & Conversational Intelligence</p>
-        </div>
-    </div>
-    ''', unsafe_allow_html=True)
     
     # Extract config variables to pass down
     slack_url = os.environ.get("SLACK_WEBHOOK_URL", "")
