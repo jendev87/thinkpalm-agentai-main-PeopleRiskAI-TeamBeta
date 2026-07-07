@@ -213,34 +213,29 @@ def render_header():
     
     /* Chat Bubble CSS moved and consolidated below */
     
-    /* Assistant Bubble Buttons (PDF/DOCX) */
-    div[data-testid="stChatMessage"] button[kind="secondary"] {
-        background: transparent !important;
-        color: #A78BFA !important;
-        border: 1px solid rgba(167, 139, 250, 0.4) !important;
+    /* Unified Assistant Bubble Action Buttons (DOCX/PDF/Alert and Follow-up Chips) */
+    div[data-testid="stChatMessage"]:has(.assistant-marker) button {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
         border-radius: 8px !important;
-        padding: 6px 12px !important;
-        font-weight: 600 !important;
-        margin-top: 10px !important;
-    }
-
-    /* Suggested Questions Buttons */
-    div[data-testid="stColumn"]:has(.chat-scroll-anchor) div.stButton > button[kind="secondary"] {
-        background: rgba(30, 41, 59, 0.6) !important;
-        border: 1px solid rgba(255, 255, 255, 0.08) !important;
-        border-radius: 12px !important;
         color: #E2E8F0 !important;
-        text-align: left !important;
-        justify-content: flex-start !important;
-        padding: 14px 16px !important;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.1) !important;
-        font-size: 0.9rem !important;
-        white-space: normal !important;
+        padding: 4px 10px !important;
+        font-weight: 500 !important;
+        font-size: 0.8rem !important;
+        white-space: nowrap !important;
+        margin-top: 4px !important;
+        min-height: 32px !important;
+        transition: all 0.2s ease !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
     }
-    div[data-testid="stColumn"]:has(.chat-scroll-anchor) div.stButton > button[kind="secondary"]:hover {
-        background: rgba(30, 41, 59, 1) !important;
-        border-color: rgba(255, 255, 255, 0.15) !important;
-        color: #F8FAFC !important;
+    
+    div[data-testid="stChatMessage"]:has(.assistant-marker) button:hover {
+        background: rgba(255, 255, 255, 0.15) !important;
+        border-color: rgba(255, 255, 255, 0.25) !important;
+        color: #FFFFFF !important;
+        transform: translateY(-1px) !important;
     }
     
     /* Chat Input */
@@ -1026,18 +1021,22 @@ def render_executive_summary(df, slack_url, smtp_host, smtp_port, smtp_user, smt
         )
     with exec_col2:
         if st.button("📧 Email Report to HR Leads", key="email_exec_pdf"):
-            success = send_manager_email(
-                target_email=target_email,
-                subject="Executive Summary: HR Attrition Risk",
-                body="Please review the attached macro-level executive summary.",
-                attachment_bytes=pdf_bytes,
-                filename="executive_summary.pdf",
-                smtp_host=smtp_host, smtp_port=smtp_port, smtp_user=smtp_user, smtp_pass=smtp_pass
-            )
-            if success:
-                st.toast("Executive Report Emailed Successfully!", icon="✅")
+            if not smtp_host or smtp_host == "smtp.example.com":
+                st.toast("⚠️ Please configure SMTP settings in the Configuration popover to send emails.", icon="⚠️")
             else:
-                st.error("Failed to send email.")
+                pdf_bytes = generate_executive_pdf(df)
+                success = send_manager_email(
+                    target_email=target_email,
+                    subject="Executive Summary: HR Attrition Risk",
+                    body="Please review the attached macro-level executive summary.",
+                    attachment_bytes=pdf_bytes,
+                    filename="executive_summary.pdf",
+                    smtp_host=smtp_host, smtp_port=smtp_port, smtp_user=smtp_user, smtp_pass=smtp_pass
+                )
+                if success:
+                    st.toast("Executive Report Emailed Successfully!", icon="✅")
+                else:
+                    st.error("Failed to send email.")
 
 def render_configuration(slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, target_email):
     st.markdown("## ⚙️ System Configuration & Automation Settings")
@@ -1075,12 +1074,21 @@ def render_configuration(slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, 
     with setup_col2:
         st.markdown("#### **Automation & Action APIs**")
         st.markdown("<small><i>(Leave blank for simulated execution)</i></small>", unsafe_allow_html=True)
-        st.text_input("Slack Webhook URL", type="password", key="form_slack")
-        st.text_input("SMTP Host", key="form_smtp_host")
-        st.number_input("SMTP Port", value=587, key="form_smtp_port")
-        st.text_input("SMTP User Address", key="form_smtp_user")
-        st.text_input("SMTP App Password", type="password", key="form_smtp_pass")
-        st.text_input("Target Manager Email", value="manager@thinkpalm.com", key="form_target_email")
+        slack = st.text_input("Slack Webhook URL", type="password", value=slack_url)
+        host = st.text_input("SMTP Host", value=smtp_host)
+        port = st.number_input("SMTP Port", value=smtp_port)
+        user = st.text_input("SMTP User Address", value=smtp_user)
+        pw = st.text_input("SMTP App Password", type="password", value=smtp_pass)
+        target = st.text_input("Target Manager Email", value=target_email)
+        st.markdown("<div style='margin-top: 12px;'></div>", unsafe_allow_html=True)
+        if st.button("💾 Save Automation Settings", use_container_width=True):
+            st.session_state["saved_slack"] = slack
+            st.session_state["saved_smtp_host"] = host
+            st.session_state["saved_smtp_port"] = port
+            st.session_state["saved_smtp_user"] = user
+            st.session_state["saved_smtp_pass"] = pw
+            st.session_state["saved_target_email"] = target
+            st.success("Automation Settings Saved Successfully!")
 
 def render_dashboard(col_dash, df, slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, target_email):
     with col_dash:
@@ -1239,14 +1247,69 @@ def render_chat_history(slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, t
                 if msg["role"] == "assistant" and idx > 0:
                     st.markdown("<div style='margin-top: 4px;'></div>", unsafe_allow_html=True)
                     
-                    docx_bytes = create_mitigation_docx(msg["content"])
-                    st.download_button(
-                        label="View full analysis ↗",
-                        data=docx_bytes,
-                        file_name=f"chat_export_{idx}.docx",
-                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                        key=f"docx_{idx}"
-                    )
+                    btn_col1, btn_col2, btn_col3 = st.columns(3)
+
+                    with btn_col1:
+                        docx_bytes = create_mitigation_docx(msg["content"])
+                        st.download_button(
+                            label="📥 DOCX",
+                            data=docx_bytes,
+                            file_name=f"chat_export_{idx}.docx",
+                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                            key=f"docx_{idx}",
+                            use_container_width=True
+                        )
+                    with btn_col2:
+                        if st.button("📧 Email", key=f"pdf_{idx}", help="Email to Manager", use_container_width=True):
+                            if not smtp_host or smtp_host == "smtp.example.com":
+                                st.toast("⚠️ Please configure SMTP settings in the Configuration popover to send emails.", icon="⚠️")
+                            else:
+                                pdf_bytes = create_mitigation_pdf(msg["content"])
+                                success = send_manager_email(
+                                    target_email=target_email,
+                                    subject="HR Copilot Action Plan",
+                                    body="Please review the attached plan from the HR Copilot.",
+                                    attachment_bytes=pdf_bytes,
+                                    filename=f"copilot_export_{idx}.pdf",
+                                    smtp_host=smtp_host, smtp_port=smtp_port, smtp_user=smtp_user, smtp_pass=smtp_pass
+                                )
+                                if success:
+                                    st.toast("Email Dispatched Successfully!", icon="✅")
+                                else:
+                                    st.error("Failed to send email.")
+                    with btn_col3:
+                        if st.button("💬 Slack", key=f"alert_{idx}", help="Send Slack Alert", use_container_width=True):
+                            if not slack_url or not slack_url.startswith("https://hooks.slack.com"):
+                                st.toast("⚠️ Please configure your Slack Webhook URL in settings.", icon="⚠️")
+                            else:
+                                success = dispatch_critical_alert(
+                                    webhook_url=slack_url,
+                                    employee_id="EMP-ALERT",
+                                    risk_score=90.0,
+                                    mitigation_note=msg["content"][:200] + "..."
+                                )
+                                if success:
+                                    st.toast("Slack Alert Triggered!", icon="✅")
+                                else:
+                                    st.error("Failed to send Slack alert.")
+
+                    # Follow-up Chips
+                    st.markdown("<div style='margin-top: 16px; margin-bottom: 8px; color: #94A3B8; font-size: 0.8rem; font-weight: 500;'>✨ Suggested Follow-up</div>", unsafe_allow_html=True)
+                    f_col1, f_col2 = st.columns(2)
+                    with f_col1:
+                        if st.button("Show Employees", key=f"fu1_{idx}", use_container_width=True):
+                            st.session_state.pending_query = "Show the employees for this analysis"
+                            st.rerun()
+                        if st.button("Email Manager", key=f"fu3_{idx}", use_container_width=True):
+                            st.session_state.pending_query = "Draft an email to the manager"
+                            st.rerun()
+                    with f_col2:
+                        if st.button("Compare Depts", key=f"fu2_{idx}", use_container_width=True):
+                            st.session_state.pending_query = "Compare risk across departments"
+                            st.rerun()
+                        if st.button("Create Plan", key=f"fu4_{idx}", use_container_width=True):
+                            st.session_state.pending_query = "Create a retention action plan"
+                            st.rerun()
 
         # Empty state / Suggested Questions
         if not current_messages:
@@ -1341,12 +1404,12 @@ def main():
     render_header()
     
     # Extract config variables to pass down
-    slack_url = os.environ.get("SLACK_WEBHOOK_URL", "")
-    smtp_host = os.environ.get("SMTP_HOST", "")
-    smtp_port = int(os.environ.get("SMTP_PORT", 587))
-    smtp_user = os.environ.get("SMTP_USER", "")
-    smtp_pass = os.environ.get("SMTP_PASS", "")
-    target_email = "manager@thinkpalm.com"
+    slack_url = st.session_state.get("saved_slack", os.environ.get("SLACK_WEBHOOK_URL", ""))
+    smtp_host = st.session_state.get("saved_smtp_host", os.environ.get("SMTP_HOST", ""))
+    smtp_port = int(st.session_state.get("saved_smtp_port", os.environ.get("SMTP_PORT", 587)))
+    smtp_user = st.session_state.get("saved_smtp_user", os.environ.get("SMTP_USER", ""))
+    smtp_pass = st.session_state.get("saved_smtp_pass", os.environ.get("SMTP_PASS", ""))
+    target_email = st.session_state.get("saved_target_email", "manager@thinkpalm.com")
     
 
 
