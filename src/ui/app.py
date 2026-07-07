@@ -1282,11 +1282,21 @@ def render_chat_history(slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, t
                             if not slack_url or not slack_url.startswith("https://hooks.slack.com"):
                                 st.toast("⚠️ Please configure your Slack Webhook URL in settings.", icon="⚠️")
                             else:
+                                import re
+                                emp_match = re.search(r'EMP\d{4}', msg["content"])
+                                employee_id = emp_match.group(0) if emp_match else "Multiple / General Insights"
+                                
+                                risk_match = re.search(r'(\d{2,3}\.\d)%', msg["content"])
+                                risk_score = float(risk_match.group(1)) if risk_match else "N/A"
+                                
+                                content_clean = msg["content"].replace("*", "")
+                                note_snippet = content_clean[:800] + ("..." if len(content_clean) > 800 else "")
+
                                 success = dispatch_critical_alert(
                                     webhook_url=slack_url,
-                                    employee_id="EMP-ALERT",
-                                    risk_score=90.0,
-                                    mitigation_note=msg["content"][:200] + "..."
+                                    employee_id=employee_id,
+                                    risk_score=risk_score,
+                                    mitigation_note=note_snippet
                                 )
                                 if success:
                                     st.toast("Slack Alert Triggered!", icon="✅")

@@ -1,12 +1,14 @@
 import requests
 import json
 
-def dispatch_critical_alert(webhook_url: str, employee_id: str, risk_score: float, mitigation_note: str):
+def dispatch_critical_alert(webhook_url: str, employee_id: str, risk_score, mitigation_note: str):
     """
     Dispatches a Block Kit payload to a Slack webhook. Uses simulated execution if missing valid URL configurations.
     """
+    risk_display = f"{risk_score:.1f}%" if isinstance(risk_score, (float, int)) else str(risk_score)
+
     if not webhook_url or not webhook_url.startswith("https://hooks.slack.com"):
-        print(f"[SIMULATION] Slack Alert for {employee_id} (Risk: {risk_score}%) triggered.")
+        print(f"[SIMULATION] Slack Alert for {employee_id} (Risk: {risk_display}) triggered.")
         return True
 
     payload = {
@@ -28,7 +30,7 @@ def dispatch_critical_alert(webhook_url: str, employee_id: str, risk_score: floa
                     },
                     {
                         "type": "mrkdwn",
-                        "text": f"*Risk Score:*\n{risk_score:.1f}%"
+                        "text": f"*Risk Score:*\n{risk_display}"
                     }
                 ]
             },
