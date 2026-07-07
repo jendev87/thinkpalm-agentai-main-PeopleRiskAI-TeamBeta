@@ -102,8 +102,8 @@ def render_header():
     }
 
     .block-container {
-        padding-left: 0px !important;
-        padding-right: 0px !important;
+        padding-left: 24px !important;
+        padding-right: 24px !important;
         padding-top: 24px !important;
         padding-bottom: 0 !important;
         max-width: 100% !important;
@@ -195,11 +195,81 @@ def render_header():
         overflow: hidden !important;
     }
 
-    /* Fixed width for chat */
+    /* Fixed width for chat and Dark Theme */
     div[data-testid="stColumn"]:has(.chat-scroll-anchor) {
         flex: 0 0 400px !important;
         width: 400px !important;
-        border-left: 1px solid rgba(255, 255, 255, 0.05) !important;
+        background-color: #0F1117 !important;
+        border-radius: 24px !important;
+        box-shadow: -4px 0 24px rgba(0,0,0,0.5) !important;
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    }
+    
+    div[data-testid="stColumn"]:has(.chat-scroll-anchor) > div[data-testid="stVerticalBlock"] {
+        padding: 0px 24px 24px 24px !important;
+    }
+
+    /* Native avatars re-enabled for chat messages */
+    
+    /* Chat Bubble CSS moved and consolidated below */
+    
+    /* Assistant Bubble Buttons (PDF/DOCX) */
+    div[data-testid="stChatMessage"] button[kind="secondary"] {
+        background: transparent !important;
+        color: #A78BFA !important;
+        border: 1px solid rgba(167, 139, 250, 0.4) !important;
+        border-radius: 8px !important;
+        padding: 6px 12px !important;
+        font-weight: 600 !important;
+        margin-top: 10px !important;
+    }
+
+    /* Suggested Questions Buttons */
+    div[data-testid="stColumn"]:has(.chat-scroll-anchor) div.stButton > button[kind="secondary"] {
+        background: rgba(30, 41, 59, 0.6) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        border-radius: 12px !important;
+        color: #E2E8F0 !important;
+        text-align: left !important;
+        justify-content: flex-start !important;
+        padding: 14px 16px !important;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1) !important;
+        font-size: 0.9rem !important;
+        white-space: normal !important;
+    }
+    div[data-testid="stColumn"]:has(.chat-scroll-anchor) div.stButton > button[kind="secondary"]:hover {
+        background: rgba(30, 41, 59, 1) !important;
+        border-color: rgba(255, 255, 255, 0.15) !important;
+        color: #F8FAFC !important;
+    }
+    
+    /* Chat Input */
+    div[data-testid="stChatInput"] {
+        background: #111827 !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 12px !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+        padding-right: 4px !important;
+    }
+    div[data-testid="stChatInput"] textarea {
+        color: #F8FAFC !important;
+        background: transparent !important;
+    }
+    div[data-testid="stChatInput"] textarea::placeholder {
+        color: #64748B !important;
+    }
+    div[data-testid="stChatInput"] button {
+        background: #7C3AED !important;
+        color: #FFFFFF !important;
+        border-radius: 50% !important;
+        padding: 8px !important;
+        width: 36px !important;
+        height: 36px !important;
+        margin-top: 4px !important;
+    }
+    div[data-testid="stChatInput"] button svg {
+        fill: #FFFFFF !important;
+        color: #FFFFFF !important;
     }
 
     /* Dashboard: Absolute fill with explicit scrolling */
@@ -347,10 +417,18 @@ def render_header():
     div.stButton > button[key="suggested_salary"] p { color: #3B82F6 !important; }
     div.stButton > button[key="suggested_risk"] p { color: #A855F7 !important; }
 
-    div[data-testid="stVerticalBlock"]:has(.chat-history-anchor) {
-        flex: 1 !important;
+    /* Make the marker invisible */
+    div[data-testid="stColumn"]:has(.chat-scroll-anchor) > div[data-testid="stVerticalBlock"] > div:has(.history-marker) {
+        display: none !important;
+    }
+    
+    /* Target the exact wrapper that follows the marker (the chat history container) */
+    div[data-testid="stColumn"]:has(.chat-scroll-anchor) > div[data-testid="stVerticalBlock"] > div:has(.history-marker) + div {
+        flex: 1 1 0% !important;
+        min-height: 0 !important;
         overflow-y: auto !important;
-        padding-right: 8px !important;
+        display: flex !important;
+        flex-direction: column !important;
     }
     .recent-chat-row {
         display: flex;
@@ -369,71 +447,133 @@ def render_header():
         color: #FFFFFF;
     }
 
-    div[data-testid="stChatMessage"] { margin-bottom: 32px !important; }
-    div[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] { margin-top: 8px !important; }
-
-    div[data-testid="stChatMessage"]:has(.assistant-marker) {
-        background: linear-gradient(145deg, rgba(30, 41, 59, 0.4) 0%, rgba(15, 23, 42, 0.8) 100%);
-        backdrop-filter: blur(16px);
-        border-radius: 16px;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-        padding: 16px 20px;
-        border: 1px solid rgba(59, 130, 246, 0.15);
-        border-top: 1px solid rgba(59, 130, 246, 0.3);
-        position: relative;
-        margin-top: 12px;
+    /* Modern ChatGPT / Claude Single-Column Stack */
+    div[data-testid="stChatMessage"] {
+        background: transparent !important;
+        border: none !important;
+        padding: 0 !important;
+        margin-bottom: 24px !important;
+        box-shadow: none !important;
+        
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+        align-items: flex-start !important;
+        width: 100% !important;
+        max-width: 100% !important;
     }
     
-    div[data-testid="stChatMessage"]:has(.assistant-marker)::before {
-        content: '🤖 AI AGENT';
-        position: absolute;
-        top: -10px;
-        left: 20px;
-        background: linear-gradient(90deg, #3B82F6 0%, #8B5CF6 100%);
-        color: white;
-        font-size: 0.65rem;
-        font-weight: 700;
-        padding: 2px 10px;
-        border-radius: 12px;
-        letter-spacing: 0.05em;
-        box-shadow: 0 2px 10px rgba(59, 130, 246, 0.3);
-    }
+    /* Align User Bubbles to the Right */
     div[data-testid="stChatMessage"]:has(.user-marker) {
-        background-color: #0078D4 !important;
-        border-radius: 16px !important;
-        padding: 8px 12px !important;
-        margin-left: auto !important;
-        max-width: 85% !important;
-        display: flex !important;
-        flex-direction: row-reverse !important;
+        align-items: flex-end !important;
     }
-    div[data-testid="stChatMessage"]:has(.user-marker) > div:first-child {
-        margin-left: 1rem;
-        margin-right: 0;
+    
+    /* Headers (Avatar + Name) - Avatar is ALWAYS the first child */
+    div[data-testid="stChatMessage"] > div:first-child {
+        background: transparent !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        width: auto !important;
+        height: auto !important;
+        padding: 0 4px !important;
+        color: #94A3B8 !important;
+        font-size: 1rem !important;
+        flex-direction: row !important;
+    }
+
+    /* Add Header Text Next to Avatars */
+    div[data-testid="stChatMessage"]:has(.assistant-marker) > div:first-child::after {
+        content: "AI Assistant";
+        margin-left: 8px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: #E2E8F0;
+        letter-spacing: 0.02em;
+    }
+
+    div[data-testid="stChatMessage"]:has(.user-marker) > div:first-child::after {
+        content: "You";
+        margin-left: 8px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: #94A3B8;
+        letter-spacing: 0.02em;
+    }
+
+    /* Message Content Cards - Content is ALWAYS the second child */
+    div[data-testid="stChatMessage"] > div:nth-child(2) {
+        font-size: 0.95rem !important;
+        line-height: 1.5 !important;
+        padding: 16px !important;
+        width: 100% !important; 
+        margin: 0 !important;
+    }
+    
+    div[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] {
+        margin-top: 0 !important;
+    }
+
+    /* AI Message Card styling */
+    div[data-testid="stChatMessage"]:has(.assistant-marker) > div:nth-child(2) {
+        background: #151B26 !important;
+        border: 1px solid rgba(255, 255, 255, 0.06) !important;
+        color: #E2E8F0 !important;
+        max-width: 95% !important;
+        border-radius: 4px 12px 12px 12px !important;
+    }
+
+    /* User Message Card styling */
+    div[data-testid="stChatMessage"]:has(.user-marker) > div:nth-child(2) {
+        background: rgba(255, 255, 255, 0.03) !important;
+        border: 1px solid rgba(255, 255, 255, 0.04) !important;
+        color: #FFFFFF !important;
+        border-radius: 12px 4px 12px 12px !important;
+        max-width: 75% !important;
+        padding: 12px 16px !important;
     }
 
     div[data-testid="stChatInput"] {
         position: sticky !important;
         bottom: 0 !important;
         z-index: 100 !important;
-        background: inherit !important;
+        background: transparent !important;
         margin-top: auto !important;
         padding-bottom: 24px !important;
         padding-top: 12px !important;
+        border: none !important;
     }
-    div[data-testid="stChatInput"] textarea {
+    
+    /* Target Streamlit's actual input box wrapper instead of just the textarea */
+    div[data-testid="stChatInput"] > div {
         border: 1px solid rgba(255, 255, 255, 0.1) !important;
         background-color: rgba(15, 23, 42, 0.8) !important;
         border-radius: 28px !important;
         transition: all 0.3s ease-in-out !important;
-        color: #FFFFFF !important;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
-        padding-left: 16px !important;
+        padding: 2px 8px !important;
     }
-    div[data-testid="stChatInput"] textarea:focus {
+    
+    div[data-testid="stChatInput"] > div:focus-within {
         border: 1px solid rgba(59, 130, 246, 0.6) !important;
         background-color: rgba(30, 41, 59, 0.95) !important;
         box-shadow: 0 0 20px rgba(59, 130, 246, 0.15) !important;
+    }
+
+    /* Make the inner textarea completely invisible so it doesn't double-box */
+    div[data-testid="stChatInput"] textarea {
+        border: none !important;
+        background-color: transparent !important;
+        color: #FFFFFF !important;
+        box-shadow: none !important;
+        padding-left: 8px !important;
+    }
+    
+    div[data-testid="stChatInput"] textarea:focus {
+        border: none !important;
+        background-color: transparent !important;
+        box-shadow: none !important;
+        outline: none !important;
     }
     div[data-testid="stChatInput"] button {
         background-color: transparent !important;
@@ -1032,131 +1172,112 @@ def render_dashboard(col_dash, df, slack_url, smtp_host, smtp_port, smtp_user, s
         elif st.session_state.active_navigation == "⚙️ Configuration":
             render_configuration(slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, target_email)
 
+def render_chat_panel(col_chat, slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, target_email):
+    with col_chat:
+        # Render Header and Tabs
+        has_recent = "threads" in st.session_state and len(st.session_state.threads) > 1
+        recent_style = "color: #94A3B8; cursor: pointer;" if has_recent else "color: #475569; cursor: not-allowed; opacity: 0.5;"
+        recent_title_attr = "" if has_recent else 'title="No recent conversations..."'
+
+        st.markdown(f'''
+        <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; margin-bottom: 16px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="background: rgba(124, 58, 237, 0.2); width: 32px; height: 32px; border-radius: 50%; color: #A78BFA; display: flex; align-items: center; justify-content: center;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                </div>
+                <h3 style="margin: 0; color: #F8FAFC; font-size: 1.1rem; font-weight: 700;">AI Assistant</h3>
+                <span style="background: #7C3AED; color: #FFFFFF; font-size: 0.6rem; font-weight: 700; padding: 2px 8px; border-radius: 12px;">BETA</span>
+            </div>
+            <span style="color: #64748B; cursor: pointer; font-size: 1.2rem;">✕</span>
+        </div>
+        
+        <div style="display: flex; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 24px;">
+            <div style="flex: 1; text-align: center; padding: 8px 12px; color: #A78BFA; font-weight: 600; border-bottom: 2px solid #A78BFA; cursor: pointer; font-size: 0.9rem;">Chat</div>
+            <div {recent_title_attr} style="flex: 1; text-align: center; padding: 8px 12px; {recent_style} font-weight: 500; font-size: 0.9rem;">Recent Chats</div>
+        </div>
+        ''', unsafe_allow_html=True)
+        
+        if "agent_graph" not in st.session_state:
+            st.markdown('''
+            <div style="background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 24px; text-align: center; margin-top: 20px;">
+                <h4 style="color: #F8FAFC; margin-bottom: 8px;">Agent Offline</h4>
+                <p style="color: #94A3B8; font-size: 0.9rem; margin: 0;">Please connect an AI provider via the <b>Configuration</b> tab in the left sidebar.</p>
+            </div>
+            ''', unsafe_allow_html=True)
+        else:
+            st.markdown('<div class="history-marker" style="display:none"></div>', unsafe_allow_html=True)
+            chat_container = render_chat_history(slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, target_email)
+            render_chat_input(chat_container)
+            
+            # Footer disclaimer
+            st.markdown('''
+            <div style="background: rgba(30, 41, 59, 0.4); border-radius: 8px; padding: 12px; margin-top: 24px; display: flex; align-items: flex-start; gap: 8px; color: #94A3B8; font-size: 0.75rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M12 8v4"></path><path d="M12 16h.01"></path></svg>
+                <span>AI responses may not be 100% accurate.<br>Please verify important insights.</span>
+            </div>
+            ''', unsafe_allow_html=True)
+
 def render_chat_history(slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, target_email):
-    user_queries = []
-    for tid, msgs in st.session_state.threads.items():
-        for m in msgs:
-            if m["role"] == "user":
-                user_queries.append(m["content"])
-
-    if not user_queries:
-        st.markdown('<div class="recent-chat-row"><span>No recent queries yet.</span></div>', unsafe_allow_html=True)
-    else:
-        for query in reversed(user_queries[-3:]):
-            st.markdown(f'<div class="recent-chat-row"><span>💬 {query}</span></div>', unsafe_allow_html=True)
-
-    st.markdown('<div style="margin-bottom: 16px;"></div>', unsafe_allow_html=True)
-
     # Display chat messages from history
     if not st.session_state.active_thread_id:
-        current_messages = [
-            {"role": "assistant", "content": "Hello! I am PeopleRisk AI. How can I help you manage employee retention today?", "intent": None}
-        ]
+        current_messages = []
     else:
         current_messages = st.session_state.threads.get(st.session_state.active_thread_id, [])
 
     chat_container = st.container(border=False)
     with chat_container:
-        st.markdown("<div class='chat-history-anchor'></div>", unsafe_allow_html=True)
         for idx, msg in enumerate(current_messages):
-            avatar = "🤖" if msg["role"] == "assistant" else "👤"
+            avatar = "✨" if msg["role"] == "assistant" else "👤"
             with st.chat_message(msg["role"], avatar=avatar):
                 if msg["role"] == "assistant":
-                    st.markdown("<span class='assistant-marker'></span>", unsafe_allow_html=True)
+                    st.markdown("<span class='assistant-marker' style='display:none'></span>", unsafe_allow_html=True)
                 elif msg["role"] == "user":
-                    st.markdown("<span class='user-marker'></span>", unsafe_allow_html=True)
+                    st.markdown("<span class='user-marker' style='display:none'></span>", unsafe_allow_html=True)
+                
                 st.markdown(msg["content"])
 
                 if msg["role"] == "assistant" and idx > 0:
-                    st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
-                    btn_col1, btn_col2, btn_col3 = st.columns(3)
+                    st.markdown("<div style='margin-top: 4px;'></div>", unsafe_allow_html=True)
+                    
+                    docx_bytes = create_mitigation_docx(msg["content"])
+                    st.download_button(
+                        label="View full analysis ↗",
+                        data=docx_bytes,
+                        file_name=f"chat_export_{idx}.docx",
+                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                        key=f"docx_{idx}"
+                    )
 
-                    with btn_col1:
-                        docx_bytes = create_mitigation_docx(msg["content"])
-                        st.download_button(
-                            label="📄 DOCX",
-                            data=docx_bytes,
-                            file_name=f"chat_export_{idx}.docx",
-                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                            key=f"docx_{idx}"
-                        )
-                    with btn_col2:
-                        if st.button("📋 PDF", key=f"pdf_{idx}", help="Email to Manager"):
-                            pdf_bytes = create_mitigation_pdf(msg["content"])
-                            success = send_manager_email(
-                                target_email=target_email,
-                                subject="HR Copilot Action Plan",
-                                body="Please review the attached plan from the HR Copilot.",
-                                attachment_bytes=pdf_bytes,
-                                filename=f"copilot_export_{idx}.pdf",
-                                smtp_host=smtp_host, smtp_port=smtp_port, smtp_user=smtp_user, smtp_pass=smtp_pass
-                            )
-                            if success:
-                                st.toast("Email Dispatched Successfully!", icon="✅")
-                            else:
-                                st.error("Failed to send email.")
-                    with btn_col3:
-                        if st.button("🚨 Alert", key=f"alert_{idx}", help="Send Slack Alert"):
-                            success = dispatch_critical_alert(
-                                webhook_url=slack_url,
-                                employee_id="EMP-ALERT",
-                                risk_score=90.0,
-                                mitigation_note=msg["content"][:200] + "..."
-                            )
-                            if success:
-                                st.toast("Slack Alert Triggered!", icon="✅")
-                            else:
-                                st.error("Failed to send Slack alert.")
+        # Empty state / Suggested Questions
+        if not current_messages:
+            q1 = "💬 How does attrition risk vary by department?"
+            q2 = "💬 Show high risk employees with low tenure"
+            q3 = "💬 What impact will attrition have on our business?"
+            q4 = "💬 Compare risk trends with previous quarter"
+            
+            st.button(q1, key="suggested_1", use_container_width=True)
+            st.button(q2, key="suggested_2", use_container_width=True)
+            st.button(q3, key="suggested_3", use_container_width=True)
+            st.button(q4, key="suggested_4", use_container_width=True)
+            
+            # Check if they were clicked
+            if st.session_state.get('suggested_1'):
+                st.session_state.pending_query = q1.replace("💬 ", "")
+                st.rerun()
+            if st.session_state.get('suggested_2'):
+                st.session_state.pending_query = q2.replace("💬 ", "")
+                st.rerun()
+            if st.session_state.get('suggested_3'):
+                st.session_state.pending_query = q3.replace("💬 ", "")
+                st.rerun()
+            if st.session_state.get('suggested_4'):
+                st.session_state.pending_query = q4.replace("💬 ", "")
+                st.rerun()
 
-                    # Follow-up Chips
-                    st.markdown("<div style='margin-top: 16px; margin-bottom: 8px; color: #94A3B8; font-size: 0.8rem; font-weight: 500;'>✨ Suggested Follow-up</div>", unsafe_allow_html=True)
-                    f_col1, f_col2, f_col3, f_col4 = st.columns(4)
-                    if f_col1.button("Show Employees", key=f"fu1_{idx}", use_container_width=True):
-                        st.session_state.pending_query = "Show the employees for this analysis"
-                        st.rerun()
-                    if f_col2.button("Compare Depts", key=f"fu2_{idx}", use_container_width=True):
-                        st.session_state.pending_query = "Compare risk across departments"
-                        st.rerun()
-                    if f_col3.button("Email Manager", key=f"fu3_{idx}", use_container_width=True):
-                        st.session_state.pending_query = "Draft an email to the manager"
-                        st.rerun()
-                    if f_col4.button("Generate PDF", key=f"fu4_{idx}", use_container_width=True):
-                        st.session_state.pending_query = "Generate a PDF report"
-                        st.rerun()
-
-    if st.button("➕ New Conversation Thread", key="btn_new_thread", use_container_width=True):
-        st.session_state.active_thread_id = None
-        st.session_state.pending_query = None
-        st.rerun()
-
-    st.markdown("<p style='color: #64748B; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;'>Suggested Questions</p>", unsafe_allow_html=True)
     return chat_container
 
-
-
-    q1 = "⚠ Tenure drivers"
-    q2 = "💵 Salary queries"
-    q3 = "🚨 High Risk summaries"
-    q4 = "📈 Engineering risk"
-
-    grid_col1, grid_col2 = st.columns(2)
-    with grid_col1:
-        if st.button(q1, key="suggested_tenure", use_container_width=True):
-            st.session_state.pending_query = "What are the primary tenure drivers for attrition?"
-            st.rerun()
-        if st.button(q3, key="suggested_risk", use_container_width=True):
-            st.session_state.pending_query = "Summarize the high flight risk employees."
-            st.rerun()
-    with grid_col2:
-        if st.button(q2, key="suggested_salary", use_container_width=True):
-            st.session_state.pending_query = "Are salary levels impacting the flight risk?"
-            st.rerun()
-        if st.button(q4, key="suggested_eng", use_container_width=True):
-            st.session_state.pending_query = "Why is Engineering high risk?"
-            st.rerun()
-
 def render_chat_input(chat_container):
-    prompt = st.chat_input("Ask about employee risk data...")
+    prompt = st.chat_input("Ask anything about attrition...")
     if "pending_query" in st.session_state and st.session_state.pending_query:
         prompt = st.session_state.pending_query
         st.session_state.pending_query = None
@@ -1165,16 +1286,15 @@ def render_chat_input(chat_container):
         with chat_container:
             if not st.session_state.active_thread_id:
                 st.session_state.active_thread_id = str(uuid.uuid4())
-                st.session_state.threads[st.session_state.active_thread_id] = [
-                    {"role": "assistant", "content": "Hello! I am PeopleRisk AI. How can I help you manage employee retention today?", "intent": None}
-                ]
+                st.session_state.threads[st.session_state.active_thread_id] = []
 
-            st.chat_message("user", avatar="👤").markdown(f"<span class='user-marker'></span>{prompt}", unsafe_allow_html=True)
+            st.chat_message("user", avatar="👤").markdown(f"<span class='user-marker' style='display:none'></span>{prompt}", unsafe_allow_html=True)
             st.session_state.threads[st.session_state.active_thread_id].append({"role": "user", "content": prompt})
 
-            with st.chat_message("assistant", avatar="🤖"):
+            with st.chat_message("assistant", avatar="✨"):
+                st.markdown("<span class='assistant-marker' style='display:none'></span>", unsafe_allow_html=True)
                 message_placeholder = st.empty()
-                with st.spinner("🤖 Thinking... Analyzing HR Graph Metrics..."):
+                with st.spinner("Analyzing..."):
                     config = {"configurable": {"thread_id": st.session_state.active_thread_id}}
                     input_state = {"messages": [("user", prompt)]}
 
@@ -1201,67 +1321,6 @@ def render_chat_input(chat_container):
                             st.error("The agent did not return a valid response.")
                     except Exception as e:
                         st.error(f"Error during execution: {e}")
-
-def render_chat_panel(col_chat, slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, target_email):
-    with col_chat:
-        with st.container(border=False):
-            if "agent_graph" not in st.session_state:
-                st.markdown('''
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
-                    <h3 style="margin: 0; color: #FFFFFF; font-size: 1.25rem; font-weight: 600;">🤖 HR Copilot</h3>
-                    <span style="background: rgba(239, 68, 68, 0.12); color: #F87171; font-size: 0.75rem; font-weight: 600; padding: 4px 10px; border-radius: 12px; display: inline-flex; align-items: center; gap: 6px;">
-                        <span style="width: 6px; height: 6px; background-color: #F87171; border-radius: 50%; display: inline-block;"></span> Disconnected
-                    </span>
-                </div>
-                ''', unsafe_allow_html=True)
-                st.markdown('''
-                <div style="
-                    background: rgba(255, 255, 255, 0.02);
-                    backdrop-filter: blur(16px);
-                    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-                    border: 1px solid rgba(255, 255, 255, 0.05);
-                    border-radius: 16px;
-                    padding: 24px;
-                    text-align: center;
-                    margin-top: 20px;
-                ">
-                    <h4 style="color: #FFFFFF; margin-bottom: 8px;">Agent Offline</h4>
-                    <p style="color: #94A3B8; font-size: 0.9rem; margin: 0;">Please connect an AI provider via the <b>System Configuration & Settings</b> popover in the top right to enable the conversational copilot.</p>
-                </div>
-                ''', unsafe_allow_html=True)
-            else:
-                active_provider = st.session_state.get("ai_provider", "Google Gemini")
-                st.markdown(f'''
-                <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 14px 18px; margin-bottom: 20px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="color: #FFFFFF; font-weight: 600; font-size: 0.95rem; letter-spacing: -0.01em;">✨ {active_provider}</span>
-                        <span style="background: rgba(34, 197, 94, 0.15); color: #4ADE80; font-size: 0.65rem; font-weight: 700; padding: 2px 6px; border-radius: 12px; display: inline-flex; align-items: center; gap: 4px; text-transform: uppercase; letter-spacing: 0.05em;">
-                            <span style="width: 4px; height: 4px; background-color: #4ADE80; border-radius: 50%;"></span> Active
-                        </span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; font-size: 0.75rem; color: #64748B;">
-                        <span>System Gateway: Verified</span>
-                        <span style="font-family: monospace; color: #94A3B8;">Latency: 0.8s</span>
-                    </div>
-                </div>
-                ''', unsafe_allow_html=True)
-
-                st.markdown('''
-                <div style="margin-bottom: 16px;">
-                    <div class="context-pill">
-                        <span>📍 Global Dashboard</span>
-                        <span style="opacity: 0.5;">|</span>
-                        <span>June 2026</span>
-                        <span style="margin-left: 4px; cursor: pointer;">✕</span>
-                    </div>
-                </div>
-                ''', unsafe_allow_html=True)
-
-                st.markdown('''
-                <h3 style="color: #FFFFFF; font-size: 1rem; font-weight: 600; margin-bottom: 12px;">🕒 Recent Sessions</h3>
-                ''', unsafe_allow_html=True)
-        chat_container = render_chat_history(slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, target_email)
-        render_chat_input(chat_container)
 
 def load_risk_data():
     project_root = Path(__file__).parent.parent.parent
