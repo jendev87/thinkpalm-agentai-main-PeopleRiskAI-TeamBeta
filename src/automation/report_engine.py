@@ -1,6 +1,17 @@
 import pandas as pd
 from datetime import datetime
-from weasyprint import HTML
+
+
+def _html_to_pdf(html_content: str) -> bytes:
+    try:
+        from weasyprint import HTML
+    except (ImportError, OSError) as exc:
+        raise RuntimeError(
+            "PDF generation requires WeasyPrint's native GTK libraries, which are not "
+            "installed on this system. Install the GTK3 runtime for Windows, then retry. "
+            "See https://doc.courtbouillon.org/weasyprint/stable/first_steps.html#windows"
+        ) from exc
+    return HTML(string=html_content).write_pdf()
 
 def generate_executive_pdf(metrics_df: pd.DataFrame, inference_text: str) -> bytes:
     """
@@ -89,6 +100,4 @@ def generate_executive_pdf(metrics_df: pd.DataFrame, inference_text: str) -> byt
     </html>
     """
     
-    # Weasyprint generation
-    pdf_bytes = HTML(string=html_content).write_pdf()
-    return pdf_bytes
+    return _html_to_pdf(html_content)

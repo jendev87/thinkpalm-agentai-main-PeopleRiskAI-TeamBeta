@@ -1,7 +1,18 @@
 from docx import Document
 from io import BytesIO
 from datetime import datetime
-from weasyprint import HTML
+
+
+def _html_to_pdf(html_content: str) -> bytes:
+    try:
+        from weasyprint import HTML
+    except (ImportError, OSError) as exc:
+        raise RuntimeError(
+            "PDF generation requires WeasyPrint's native GTK libraries, which are not "
+            "installed on this system. Install the GTK3 runtime for Windows, then retry. "
+            "See https://doc.courtbouillon.org/weasyprint/stable/first_steps.html#windows"
+        ) from exc
+    return HTML(string=html_content).write_pdf()
 
 def create_mitigation_docx(narrative: str) -> bytes:
     doc = Document()
@@ -63,6 +74,4 @@ def create_mitigation_pdf(narrative: str) -> bytes:
     </html>
     """
     
-    # Weasyprint generation
-    pdf_bytes = HTML(string=html_content).write_pdf()
-    return pdf_bytes
+    return _html_to_pdf(html_content)

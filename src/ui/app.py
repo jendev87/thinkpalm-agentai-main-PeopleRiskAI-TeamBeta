@@ -1161,8 +1161,11 @@ def render_dashboard(col_dash, df, slack_url, smtp_host, smtp_port, smtp_user, s
                                     f"for the {highest['High_Risk_Count']} high-risk individuals.")
                         return generate_executive_pdf(metrics, inf_text)
                     
-                    pdf_data = get_cached_pdf(df)
-                    st.download_button("📤 Export", data=pdf_data, file_name="dashboard_export.pdf", mime="application/pdf", use_container_width=True, key="tb_export")
+                    try:
+                        pdf_data = get_cached_pdf(df)
+                        st.download_button("📤 Export", data=pdf_data, file_name="dashboard_export.pdf", mime="application/pdf", use_container_width=True, key="tb_export")
+                    except Exception as e:
+                        st.button("📤 Export", use_container_width=True, disabled=True, key="tb_export_disabled", help=f"PDF export unavailable: {e}")
                 
                 st.markdown("<div style='margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.05);'></div>", unsafe_allow_html=True)
 
