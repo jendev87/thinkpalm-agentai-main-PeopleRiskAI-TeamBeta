@@ -1,10 +1,13 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import pandas as pd
 import sqlite3
 import plotly.express as px
 from pathlib import Path
 import os
 import sys
+import json
+from io import StringIO
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -28,6 +31,8 @@ if "active_thread_id" not in st.session_state:
     st.session_state.active_thread_id = None
 if "pending_query" not in st.session_state:
     st.session_state.pending_query = None
+if "sidebar_collapsed" not in st.session_state:
+    st.session_state.sidebar_collapsed = True
 
 if "agent_graph" not in st.session_state:
     try:
@@ -39,16 +44,70 @@ if "agent_graph" not in st.session_state:
     except Exception:
         pass
 
+PLOTLY_CONFIG = {"displayModeBar": False, "responsive": True}
+
+@st.cache_data(show_spinner=False)
+def _cached_docx(content: str) -> bytes:
+    return create_mitigation_docx(content)
+
+@st.cache_data(show_spinner=False)
+def _cached_exec_pdf(metrics_json: str, inference_text: str) -> bytes:
+    metrics = pd.read_json(StringIO(metrics_json))
+    return generate_executive_pdf(metrics, inference_text)
+
+def _build_macro_metrics(df: pd.DataFrame):
+    def get_top_driver(series):
+        return series.mode()[0] if not series.mode().empty else "N/A"
+    metrics = df.groupby("Department").agg(
+        Average_Risk=("RiskPercentage", "mean"),
+        High_Risk_Count=("RiskPercentage", lambda x: (x > 75).sum()),
+        Top_Driver=("Driver1", get_top_driver),
+    ).reset_index()
+    metrics["Average_Risk"] = metrics["Average_Risk"].round(1)
+    highest = metrics.loc[metrics["Average_Risk"].idxmax()]
+    inference = (
+        f"The **{highest['Department']}** segment displays disproportionate "
+        f"risk exposure (Avg: {highest['Average_Risk']}%), driven primarily by "
+        f"{highest['Top_Driver']}. We recommend immediate qualitative assessments "
+        f"for the {highest['High_Risk_Count']} high-risk individuals."
+    )
+    return metrics, inference
+
+@st.cache_data(show_spinner=False)
+def _chart_aggregates(df: pd.DataFrame):
+    """Precompute chart aggregates once per dataset fingerprint."""
+    bins = [0, 25, 50, 75, 100]
+    labels = ["Low", "Medium", "High", "Critical"]
+    risk_strat = pd.cut(df["RiskPercentage"], bins=bins, labels=labels, include_lowest=True)
+    tenure_agg = df.groupby("Tenure", as_index=False)["RiskPercentage"].mean()
+    hours_agg = df.groupby("MonthlyHours", as_index=False)["RiskPercentage"].mean()
+    strat_counts = risk_strat.value_counts().reset_index()
+    strat_counts.columns = ["Risk Level", "Count"]
+    heat_agg = df.groupby(["Department", "Role"], as_index=False)["RiskPercentage"].mean()
+    heat_pivot = heat_agg.pivot(index="Department", columns="Role", values="RiskPercentage").fillna(0)
+    driver_dept = df[["Driver1", "Department"]].dropna()
+    # Cap parallel-categories rows for speed on large rosters
+    if len(driver_dept) > 400:
+        driver_dept = driver_dept.sample(400, random_state=42)
+    return tenure_agg, hours_agg, strat_counts, heat_pivot, driver_dept, risk_strat
+
 def render_header():
     st.markdown("""
     <style>
     /* ========================================== */
     /* 1. TYPOGRAPHY */
     /* ========================================== */
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-    .stApp, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
-        font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+    .stApp, [data-testid="stAppViewContainer"], [data-testid="stMain"],
+    [data-testid="stSidebar"], .stMarkdown, button, input, textarea, select, p, h1, h2, h3, h4, h5, h6 {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+    }
+
+    .stApp h2,
+    [data-testid="stMarkdownContainer"] h2,
+    .stMarkdown h2 {
+        font-size: 1.575rem !important; /* ~10% smaller than default 1.75rem */
     }
 
     div[data-testid="stMetricLabel"] {
@@ -70,7 +129,9 @@ def render_header():
     /* 2. LAYOUT & VARIABLES */
     /* ========================================== */
     :root {
-        --header-height: 72px;
+        --header-height: 0px;
+        --sidebar-anim-dur: 0.32s;
+        --sidebar-anim-ease: cubic-bezier(0.22, 1, 0.36, 1);
     }
 
     /* Premium Scrollbar Styling */
@@ -101,6 +162,17 @@ def render_header():
         visibility: hidden !important;
     }
 
+    /* Hide empty Streamlit top bar so it doesn't blur/clip the AI Assistant heading */
+    header[data-testid="stHeader"] {
+        display: none !important;
+        height: 0 !important;
+        min-height: 0 !important;
+        background: transparent !important;
+        backdrop-filter: none !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+
     .block-container {
         padding-left: 24px !important;
         padding-right: 24px !important;
@@ -108,13 +180,18 @@ def render_header():
         padding-bottom: 0 !important;
         max-width: 100% !important;
     }
+    /* Remove right-side gutter so AI Assistant aligns to page edge */
+    .block-container:has(.chat-scroll-anchor) {
+        padding-right: 0 !important;
+    }
 
     /* ========================================== */
     /* 3. SIDEBAR REDESIGN (PERMANENTLY OPEN) */
     /* ========================================== */
     [data-testid="stSidebar"] {
-        min-width: 226px !important;
-        max-width: 226px !important;
+        min-width: 250px !important;
+        max-width: 250px !important;
+        width: 250px !important;
         background-color: #111827 !important;
         border-right: 1px solid rgba(255, 255, 255, 0.03) !important;
         transform: translateX(0px) !important;
@@ -122,10 +199,113 @@ def render_header():
         position: relative !important;
         visibility: visible !important;
         display: block !important;
+        transition: width var(--sidebar-anim-dur) var(--sidebar-anim-ease),
+                    min-width var(--sidebar-anim-dur) var(--sidebar-anim-ease),
+                    max-width var(--sidebar-anim-dur) var(--sidebar-anim-ease),
+                    border-color var(--sidebar-anim-dur) var(--sidebar-anim-ease) !important;
+        overflow-x: hidden !important;
+    }
+    [data-testid="stSidebar"] [data-testid="stSidebarUserContent"],
+    [data-testid="stSidebar"] .block-container,
+    [data-testid="stSidebar"] [data-testid="stSidebarHeader"],
+    [data-testid="stSidebar"] [data-testid="stLogoSpacer"],
+    [data-testid="stSidebar"] .st-key-sidebar_toggle {
+        transition: padding var(--sidebar-anim-dur) var(--sidebar-anim-ease),
+                    margin var(--sidebar-anim-dur) var(--sidebar-anim-ease),
+                    justify-content var(--sidebar-anim-dur) var(--sidebar-anim-ease),
+                    align-items var(--sidebar-anim-dur) var(--sidebar-anim-ease) !important;
     }
     
-    [data-testid="collapsedControl"] {
+    [data-testid="collapsedControl"],
+    [data-testid="stSidebarCollapseButton"],
+    [data-testid="stSidebarCollapsedControl"],
+    button[kind="header"] {
         display: none !important;
+        visibility: hidden !important;
+    }
+
+    /* Logo + caption in native stLogoSpacer */
+    [data-testid="stSidebar"] [data-testid="stSidebarHeader"] {
+        align-items: flex-start !important;
+        padding: 4px 12px 6px 12px !important;
+    }
+    [data-testid="stSidebar"] [data-testid="stLogoSpacer"] {
+        display: flex !important;
+        flex: 1 1 auto !important;
+        width: 100% !important;
+        align-items: flex-start !important;
+        justify-content: flex-start !important;
+    }
+    [data-testid="stSidebar"] [data-testid="stLogoSpacer"] .pr-sidebar-brand__title {
+        margin: 0 !important;
+        padding: 0 !important;
+        font-size: 1.17rem !important;
+        color: #FFFFFF !important;
+        letter-spacing: -0.02em !important;
+        font-weight: 600 !important;
+        line-height: 1.2 !important;
+    }
+    [data-testid="stSidebar"] [data-testid="stLogoSpacer"] .pr-sidebar-brand__caption {
+        margin: 2px 0 0 0 !important;
+        padding: 0 !important;
+        color: #94A3B8 !important;
+        font-size: 0.75rem !important;
+        font-weight: 500 !important;
+    }
+    [data-testid="stSidebar"] [data-testid="stLogoSpacer"] .pr-sidebar-brand--collapsed {
+        display: flex !important;
+        justify-content: center !important;
+        width: 100% !important;
+    }
+    [data-testid="stSidebar"] [data-testid="stLogoSpacer"] .pr-sidebar-brand__icon {
+        font-size: 1.6rem !important;
+        line-height: 1 !important;
+    }
+
+    /* Sidebar toggle button sizing (position set per open/closed state) */
+    [data-testid="stSidebar"] .st-key-sidebar_toggle {
+        margin: 0 0 12px 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        z-index: 50 !important;
+        pointer-events: auto !important;
+        display: flex !important;
+        justify-content: center !important;
+    }
+    [data-testid="stSidebar"] .st-key-sidebar_toggle button {
+        min-width: 35px !important;
+        min-height: 35px !important;
+        width: 35px !important;
+        max-width: 35px !important;
+        height: 35px !important;
+        padding: 8px !important;
+        box-sizing: border-box !important;
+        margin: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 6px !important;
+        pointer-events: auto !important;
+    }
+    [data-testid="stSidebar"] .st-key-sidebar_toggle button [data-testid="stMarkdownContainer"] {
+        margin: 0 !important;
+        padding: 0 !important;
+        line-height: 1 !important;
+    }
+    [data-testid="stSidebar"] .st-key-sidebar_toggle button [data-testid="stMarkdownContainer"] p {
+        margin: 0 !important;
+        padding: 0 !important;
+        font-size: 1.1rem !important;
+        line-height: 1 !important;
+    }
+
+    .st-emotion-cache-tn0cau {
+        display: flex;
+        gap: 1rem;
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+        min-width: 1.6rem;
     }
     
     .stApp [data-testid="stSidebar"] button[kind="secondary"][data-testid="stBaseButton-secondary"],
@@ -142,7 +322,14 @@ def render_header():
         color: #94A3B8 !important;
         font-weight: 500 !important;
         font-size: 0.85rem !important;
-        transition: background 0.15s ease, color 0.15s ease !important;
+        transition: background 0.18s ease,
+                    color 0.18s ease,
+                    padding var(--sidebar-anim-dur) var(--sidebar-anim-ease),
+                    margin var(--sidebar-anim-dur) var(--sidebar-anim-ease),
+                    justify-content var(--sidebar-anim-dur) var(--sidebar-anim-ease),
+                    min-width var(--sidebar-anim-dur) var(--sidebar-anim-ease),
+                    max-width var(--sidebar-anim-dur) var(--sidebar-anim-ease),
+                    width var(--sidebar-anim-dur) var(--sidebar-anim-ease) !important;
         height: auto !important;
         min-height: 0 !important;
         margin-bottom: 2px !important;
@@ -168,37 +355,88 @@ def render_header():
         background: rgba(37, 99, 235, 0.15) !important;
         box-shadow: inset 3px 0 0 0 #3B82F6 !important;
     }
+
+    /* Keep all expanded nav items start-aligned with icons on one vertical line */
+    .stApp [data-testid="stSidebar"] .st-key-nav_risk_overview button,
+    .stApp [data-testid="stSidebar"] .st-key-nav_top_drivers button,
+    .stApp [data-testid="stSidebar"] .st-key-nav_high_risk_roster button,
+    .stApp [data-testid="stSidebar"] .st-key-nav_executive_summary button,
+    .stApp [data-testid="stSidebar"] .st-key-nav_configuration button {
+        width: 100% !important;
+        min-width: 100% !important;
+        justify-content: flex-start !important;
+        align-items: center !important;
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+        gap: 10px !important;
+    }
+    .stApp [data-testid="stSidebar"] .st-key-nav_risk_overview button [data-testid="stIconMaterial"],
+    .stApp [data-testid="stSidebar"] .st-key-nav_top_drivers button [data-testid="stIconMaterial"],
+    .stApp [data-testid="stSidebar"] .st-key-nav_high_risk_roster button [data-testid="stIconMaterial"],
+    .stApp [data-testid="stSidebar"] .st-key-nav_executive_summary button [data-testid="stIconMaterial"],
+    .stApp [data-testid="stSidebar"] .st-key-nav_configuration button [data-testid="stIconMaterial"] {
+        width: 18px !important;
+        min-width: 18px !important;
+        display: inline-flex !important;
+        justify-content: center !important;
+    }
+
+    /* Streamlit button inner flex wrapper — keep icon + label start-aligned */
+    [data-testid="stSidebar"] .st-emotion-cache-1lads1q,
+    .stApp [data-testid="stSidebar"] .st-key-nav_risk_overview button > div,
+    .stApp [data-testid="stSidebar"] .st-key-nav_top_drivers button > div,
+    .stApp [data-testid="stSidebar"] .st-key-nav_high_risk_roster button > div,
+    .stApp [data-testid="stSidebar"] .st-key-nav_executive_summary button > div,
+    .stApp [data-testid="stSidebar"] .st-key-nav_configuration button > div {
+        display: flex !important;
+        align-items: start !important;
+        justify-content: start !important;
+        width: 100% !important;
+    }
     
     @keyframes fadeUp {
-        0% { opacity: 0; transform: translateY(10px); }
+        0% { opacity: 0; transform: translateY(6px); }
         100% { opacity: 1; transform: translateY(0); }
     }
     .kpi-card {
-        animation: fadeUp 0.4s ease-out forwards;
-        transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease !important;
+        animation: fadeUp 0.25s ease-out forwards;
+        transition: transform 0.15s ease, box-shadow 0.15s ease !important;
     }
     .kpi-card:hover {
-        transform: translateY(-4px) !important;
-        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7) !important;
-        filter: brightness(1.05);
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
     }
     
     [data-testid="stSidebar"] p {
         margin: 0 !important;
     }
 
+    /* Keep dashboard + assistant visible together on wide screens */
+    div[data-testid="stHorizontalBlock"]:has(.chat-scroll-anchor) {
+        flex-wrap: nowrap !important;
+        align-items: stretch !important;
+    }
+
     /* Give both columns a strict fixed height relative to viewport */
     div[data-testid="stColumn"]:has(.dashboard-scroll-anchor),
     div[data-testid="stColumn"]:has(.chat-scroll-anchor) {
         height: calc(100vh - var(--header-height)) !important;
-        position: relative !important; 
+        position: relative !important;
         overflow: hidden !important;
     }
 
-    /* Fixed width for chat and Dark Theme */
+    /* Let dashboard shrink so fixed chat column doesn't get pushed off-screen */
+    div[data-testid="stColumn"]:has(.dashboard-scroll-anchor) {
+        flex: 1 1 0 !important;
+        min-width: 0 !important;
+    }
+
+    /* Chat column width adapts by screen size */
     div[data-testid="stColumn"]:has(.chat-scroll-anchor) {
-        flex: 0 0 400px !important;
-        width: 400px !important;
+        flex: 0 0 380px !important;
+        width: 380px !important;
+        min-width: 320px !important;
+        margin-right: 0 !important;
         background-color: #0F1117 !important;
         border-radius: 24px !important;
         box-shadow: -4px 0 24px rgba(0,0,0,0.5) !important;
@@ -206,7 +444,55 @@ def render_header():
     }
     
     div[data-testid="stColumn"]:has(.chat-scroll-anchor) > div[data-testid="stVerticalBlock"] {
-        padding: 0px 24px 24px 24px !important;
+        padding: 16px 24px 28px 24px !important;
+    }
+
+    @media (max-width: 1400px) {
+        div[data-testid="stColumn"]:has(.chat-scroll-anchor) {
+            flex: 0 0 340px !important;
+            width: 340px !important;
+            min-width: 300px !important;
+        }
+    }
+
+    @media (max-width: 1200px) {
+        div[data-testid="stColumn"]:has(.chat-scroll-anchor) {
+            flex: 0 0 300px !important;
+            width: 300px !important;
+            min-width: 280px !important;
+        }
+    }
+
+    /* Tablets/phones: stack assistant below dashboard so it's always visible */
+    @media (max-width: 992px) {
+        div[data-testid="stHorizontalBlock"]:has(.chat-scroll-anchor) {
+            flex-wrap: wrap !important;
+        }
+        div[data-testid="stColumn"]:has(.dashboard-scroll-anchor),
+        div[data-testid="stColumn"]:has(.chat-scroll-anchor) {
+            flex: 1 1 100% !important;
+            width: 100% !important;
+            min-width: 100% !important;
+            height: auto !important;
+            overflow: visible !important;
+        }
+        div[data-testid="stColumn"]:has(.dashboard-scroll-anchor) > div[data-testid="stVerticalBlock"],
+        div[data-testid="stColumn"]:has(.chat-scroll-anchor) > div[data-testid="stVerticalBlock"] {
+            position: relative !important;
+            top: auto !important;
+            right: auto !important;
+            bottom: auto !important;
+            left: auto !important;
+            height: auto !important;
+            overflow: visible !important;
+        }
+        div[data-testid="stColumn"]:has(.dashboard-scroll-anchor) > div[data-testid="stVerticalBlock"] {
+            padding: 12px 12px 20px 12px !important;
+        }
+        .stApp, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
+            height: auto !important;
+            overflow-y: auto !important;
+        }
     }
 
     /* Native avatars re-enabled for chat messages */
@@ -219,23 +505,59 @@ def render_header():
         border: 1px solid rgba(255, 255, 255, 0.1) !important;
         border-radius: 8px !important;
         color: #E2E8F0 !important;
-        padding: 4px 10px !important;
+        padding: 6px 8px !important;
         font-weight: 500 !important;
-        font-size: 0.8rem !important;
+        font-size: 0.75rem !important;
         white-space: nowrap !important;
-        margin-top: 4px !important;
-        min-height: 32px !important;
-        transition: all 0.2s ease !important;
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+        min-height: 34px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease !important;
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
+        transform: none !important;
     }
     
     div[data-testid="stChatMessage"]:has(.assistant-marker) button:hover {
         background: rgba(255, 255, 255, 0.15) !important;
         border-color: rgba(255, 255, 255, 0.25) !important;
         color: #FFFFFF !important;
-        transform: translateY(-1px) !important;
+        transform: none !important;
+    }
+
+    /* Prevent nested columns from overlapping inside narrow chat bubbles */
+    div[data-testid="stChatMessage"] div[data-testid="stHorizontalBlock"] {
+        gap: 8px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        flex-wrap: nowrap !important;
+        align-items: stretch !important;
+        margin: 0 !important;
+    }
+    div[data-testid="stChatMessage"] div[data-testid="stColumn"] {
+        min-width: 0 !important;
+        flex: 1 1 0 !important;
+        width: auto !important;
+        overflow: hidden !important;
+    }
+    div[data-testid="stChatMessage"] div[data-testid="stColumn"] > div {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+    div[data-testid="stChatMessage"] .stButton,
+    div[data-testid="stChatMessage"] .stDownloadButton {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+    div[data-testid="stChatMessage"] .stButton > button,
+    div[data-testid="stChatMessage"] .stDownloadButton > button {
+        width: 100% !important;
     }
     
     /* Chat Input */
@@ -274,7 +596,7 @@ def render_header():
         height: 100% !important;
         overflow-y: auto !important;
         overflow-x: hidden !important;
-        padding: 12px 40px 32px 40px !important;
+        padding: 12px 10px 32px 10px !important;
         gap: 24px !important;
     }
 
@@ -286,17 +608,22 @@ def render_header():
         display: flex !important;
         flex-direction: column !important;
         overflow: hidden !important;
+        padding: 16px 24px 28px 24px !important;
+        box-sizing: border-box !important;
     }
 
     /* ========================================== */
-    /* 4. HEADER */
+    /* 4. HEADER (hidden — empty Streamlit bar was clipping AI Assistant) */
     /* ========================================== */
     header[data-testid="stHeader"] {
-        background: rgba(11, 14, 20, 0.7) !important;
-        backdrop-filter: blur(20px) !important;
-        height: 60px !important;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2) !important;
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        min-height: 0 !important;
+        background: transparent !important;
+        backdrop-filter: none !important;
+        border: none !important;
+        box-shadow: none !important;
     }
 
     /* ========================================== */
@@ -309,8 +636,8 @@ def render_header():
         padding: 32px !important;
         border-radius: 18px !important;
         box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3) !important;
-        backdrop-filter: blur(16px) !important;
-        -webkit-backdrop-filter: blur(16px) !important;
+        backdrop-filter: blur(8px) !important;
+        -webkit-backdrop-filter: blur(8px) !important;
         transition: transform 0.2s ease, box-shadow 0.2s ease !important;
     }
     
@@ -326,7 +653,7 @@ def render_header():
         background: rgba(255, 255, 255, 0.03) !important;
         border: 1px solid rgba(255, 255, 255, 0.05) !important;
         border-radius: 16px !important;
-        backdrop-filter: blur(10px) !important;
+        backdrop-filter: blur(6px) !important;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
         transition: all 0.2s ease-in-out !important;
         padding: 10px 20px !important;
@@ -377,7 +704,7 @@ def render_header():
         background: rgba(255, 255, 255, 0.03) !important;
         border: 1px solid rgba(255, 255, 255, 0.05) !important;
         border-radius: 16px !important;
-        backdrop-filter: blur(10px) !important;
+        backdrop-filter: blur(6px) !important;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
     }
     div[data-baseweb="input"] > div:focus-within, 
@@ -456,6 +783,9 @@ def render_header():
         align-items: flex-start !important;
         width: 100% !important;
         max-width: 100% !important;
+        min-width: 0 !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
     }
     
     /* Align User Bubbles to the Right */
@@ -500,21 +830,27 @@ def render_header():
     div[data-testid="stChatMessage"] > div:nth-child(2) {
         font-size: 0.95rem !important;
         line-height: 1.5 !important;
-        padding: 16px !important;
-        width: 100% !important; 
+        padding: 12px !important;
+        width: 100% !important;
+        max-width: 100% !important;
         margin: 0 !important;
+        box-sizing: border-box !important;
+        min-width: 0 !important;
     }
     
     div[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] {
         margin-top: 0 !important;
     }
 
-    /* AI Message Card styling */
+    /* AI Message Card styling — full width so action rows fit */
     div[data-testid="stChatMessage"]:has(.assistant-marker) > div:nth-child(2) {
         background: #151B26 !important;
         border: 1px solid rgba(255, 255, 255, 0.06) !important;
         color: #E2E8F0 !important;
-        max-width: 95% !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
         border-radius: 4px 12px 12px 12px !important;
     }
 
@@ -534,9 +870,27 @@ def render_header():
         z-index: 100 !important;
         background: transparent !important;
         margin-top: auto !important;
-        padding-bottom: 24px !important;
+        padding-bottom: 8px !important;
         padding-top: 12px !important;
         border: none !important;
+        flex-shrink: 0 !important;
+    }
+
+    /* Keep disclaimer fully visible below chat input */
+    .chat-disclaimer-footer {
+        flex-shrink: 0 !important;
+        margin-top: 8px !important;
+        margin-bottom: 8px !important;
+        overflow: visible !important;
+        line-height: 1.45 !important;
+    }
+    .chat-disclaimer-footer span {
+        display: block !important;
+        white-space: normal !important;
+        overflow: visible !important;
+        color: #94A3B8 !important;
+        font-size: 0.75rem !important;
+        line-height: 1.45 !important;
     }
     
     /* Target Streamlit's actual input box wrapper instead of just the textarea */
@@ -634,53 +988,221 @@ def render_header():
     </style>
     """, unsafe_allow_html=True)
 
-def render_sidebar(col_nav):
-    with col_nav:
-        # 1. Main Branding
-        st.markdown('''
-            <div style="padding: 10px 0 24px 0;">
-                <h2 style="margin: 0; padding: 0; font-size: 1.3rem; color: #FFFFFF; letter-spacing: -0.02em;">🎯 PeopleRisk AI</h2>
-                <p style="margin: 0; padding: 0; color: #94A3B8; font-size: 0.75rem; font-weight: 500;">Enterprise HR Intelligence</p>
-            </div>
-        ''', unsafe_allow_html=True)
+def inject_sidebar_brand(collapsed: bool) -> None:
+    """Place logo + caption inside Streamlit's stLogoSpacer at the top."""
+    if collapsed:
+        brand_html = (
+            '<div class="pr-sidebar-brand pr-sidebar-brand--collapsed">'
+            '<span class="pr-sidebar-brand__icon">🎯</span></div>'
+        )
+    else:
+        brand_html = (
+            '<div class="pr-sidebar-brand">'
+            '<h2 class="pr-sidebar-brand__title">🎯 PeopleRisk AI</h2>'
+            '<p class="pr-sidebar-brand__caption">Enterprise HR Intelligence</p>'
+            '</div>'
+        )
 
+    components.html(
+        f"""
+        <script>
+        (function () {{
+            const brandHtml = {json.dumps(brand_html)};
+            const mode = {json.dumps("collapsed" if collapsed else "expanded")};
+
+            function getDoc() {{
+                try {{ return window.parent.document; }} catch (e) {{ return document; }}
+            }}
+
+            function applyBrand() {{
+                const doc = getDoc();
+                const spacer = doc.querySelector('[data-testid="stSidebar"] [data-testid="stLogoSpacer"]');
+                if (!spacer) return false;
+                if (spacer.dataset.prBrandMode === mode && spacer.innerHTML === brandHtml) return true;
+                spacer.innerHTML = brandHtml;
+                spacer.dataset.prBrandMode = mode;
+                return true;
+            }}
+
+            // Apply immediately, then sync on next paint frames.
+            applyBrand();
+            let attempts = 0;
+            function syncBrand() {{
+                attempts += 1;
+                if (!applyBrand() && attempts <= 20) {{
+                    requestAnimationFrame(syncBrand);
+                }}
+            }}
+            requestAnimationFrame(syncBrand);
+
+            const doc = getDoc();
+            const sidebar = doc.querySelector('[data-testid="stSidebar"]');
+            if (sidebar) {{
+                if (window.__prBrandObserver) {{
+                    try {{ window.__prBrandObserver.disconnect(); }} catch (e) {{}}
+                }}
+                window.__prBrandObserver = new MutationObserver(function () {{
+                    applyBrand();
+                }});
+                window.__prBrandObserver.observe(sidebar, {{ childList: true, subtree: false }});
+            }}
+        }})();
+        </script>
+        """,
+        height=0,
+        width=0,
+    )
+
+def render_sidebar(col_nav):
+    collapsed = st.session_state.get("sidebar_collapsed", True)
+
+    with col_nav:
+        if st.button(
+            ":material/side_navigation:",
+            key="sidebar_toggle",
+            use_container_width=False,
+            help="Open sidebar" if collapsed else "Close sidebar",
+        ):
+            collapsed = not collapsed
+            st.session_state.sidebar_collapsed = collapsed
+
+    inject_sidebar_brand(collapsed)
+
+    if collapsed:
+        st.markdown("""
+        <style>
+        [data-testid="stSidebar"] {
+            min-width: 74px !important;
+            max-width: 74px !important;
+            width: 74px !important;
+        }
+        [data-testid="stSidebar"] .block-container,
+        [data-testid="stSidebar"] [data-testid="stSidebarUserContent"] {
+            padding-left: 2px !important;
+            padding-right: 8px !important;
+            padding-top: 4px !important;
+        }
+        [data-testid="stSidebar"] [data-testid="stSidebarHeader"] {
+            padding: 4px 8px 4px 8px !important;
+            justify-content: center !important;
+        }
+        [data-testid="stSidebar"] [data-testid="stLogoSpacer"] {
+            align-items: center !important;
+            justify-content: center !important;
+        }
+        [data-testid="stSidebar"] .st-key-sidebar_toggle {
+            position: static !important;
+            justify-content: center !important;
+            margin-bottom: 10px !important;
+        }
+        .stApp [data-testid="stSidebar"] .st-key-nav_risk_overview button [data-testid="stMarkdownContainer"],
+        .stApp [data-testid="stSidebar"] .st-key-nav_top_drivers button [data-testid="stMarkdownContainer"],
+        .stApp [data-testid="stSidebar"] .st-key-nav_high_risk_roster button [data-testid="stMarkdownContainer"],
+        .stApp [data-testid="stSidebar"] .st-key-nav_executive_summary button [data-testid="stMarkdownContainer"],
+        .stApp [data-testid="stSidebar"] .st-key-nav_configuration button [data-testid="stMarkdownContainer"] {
+            display: none !important;
+        }
+        .stApp [data-testid="stSidebar"] .st-key-nav_risk_overview button,
+        .stApp [data-testid="stSidebar"] .st-key-nav_top_drivers button,
+        .stApp [data-testid="stSidebar"] .st-key-nav_high_risk_roster button,
+        .stApp [data-testid="stSidebar"] .st-key-nav_executive_summary button,
+        .stApp [data-testid="stSidebar"] .st-key-nav_configuration button {
+            justify-content: center !important;
+            padding: 8px 0 !important;
+            min-width: 35px !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+    else:
+        # Opened sidebar only: pin close button to the right of the logo (logo stays put)
+        st.markdown("""
+        <style>
+        [data-testid="stSidebar"] [data-testid="stSidebarHeader"] {
+            position: relative !important;
+        }
+        [data-testid="stSidebar"] div:has(> .st-key-sidebar_toggle) {
+            height: 0 !important;
+            min-height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: visible !important;
+        }
+        [data-testid="stSidebar"] .st-key-sidebar_toggle {
+            position: absolute !important;
+            top: 8px !important;
+            right: 10px !important;
+            left: auto !important;
+            width: 35px !important;
+            max-width: 35px !important;
+            height: 35px !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            z-index: 1000 !important;
+            justify-content: center !important;
+            pointer-events: auto !important;
+        }
+        [data-testid="stSidebar"] .st-key-sidebar_toggle button {
+            margin: 0 !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
+    with col_nav:
         current_nav = st.session_state.get("active_navigation", "📊 Risk Overview")
 
         def nav_button(label, icon, target_state):
             is_active = (current_nav == target_state)
             btn_type = "primary" if is_active else "secondary"
-            if st.button(label, icon=icon, key=f"nav_{label}", type=btn_type, use_container_width=True):
+            slug = "nav_" + label.lower().replace(" ", "_")
+            if st.button(
+                label,
+                icon=icon,
+                key=slug,
+                type=btn_type,
+                use_container_width=True,
+                help=None,
+            ):
                 st.session_state.active_navigation = target_state
-                st.rerun()
 
         # 2. Analytics Section
-        st.markdown("<p style='color: #64748B; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; margin-top: 16px;'>Analytics</p>", unsafe_allow_html=True)
+        if not collapsed:
+            st.markdown("<p style='color: #64748B; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; margin-top: 8px;'>Analytics</p>", unsafe_allow_html=True)
         nav_button("Risk Overview", ":material/bar_chart:", "📊 Risk Overview")
         nav_button("Top Drivers", ":material/trending_up:", "🎯 Top Drivers")
         nav_button("High Risk Roster", ":material/group:", "📋 High Risk Roster")
         nav_button("Executive Summary", ":material/description:", "⚙️ Executive Summary")
 
         # 3. System Section
-        st.markdown("<p style='color: #64748B; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; margin-top: 24px;'>System</p>", unsafe_allow_html=True)
+        if not collapsed:
+            st.markdown("<p style='color: #64748B; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; margin-top: 24px;'>System</p>", unsafe_allow_html=True)
         nav_button("Configuration", ":material/settings:", "⚙️ Configuration")
         
         # 4. Bottom Utility Section
-        st.markdown('''
-            <div style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 24px; margin-top: auto; display: flex; align-items: center; justify-content: space-between;">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <div style="width: 32px; height: 32px; border-radius: 50%; background: #1E293B; display: flex; align-items: center; justify-content: center; color: #94A3B8;">
+        if collapsed:
+            st.markdown('''
+                <div style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px; margin-top: 16px; display: flex; justify-content: center;">
+                    <div style="width: 35px; height: 35px; min-width: 35px; padding: 8px; box-sizing: border-box; border-radius: 50%; background: #1E293B; display: flex; align-items: center; justify-content: center; color: #94A3B8;">
                         <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                     </div>
-                    <div>
-                        <p style="margin: 0; font-size: 0.8rem; color: #F8FAFC; font-weight: 600;">HR Administrator</p>
-                        <p style="margin: 0; font-size: 0.65rem; color: #64748B;">Enterprise Edition</p>
+                </div>
+            ''', unsafe_allow_html=True)
+        else:
+            st.markdown('''
+                <div style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 24px; margin-top: auto; display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 32px; height: 32px; border-radius: 50%; background: #1E293B; display: flex; align-items: center; justify-content: center; color: #94A3B8;">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                        </div>
+                        <div>
+                            <p style="margin: 0; font-size: 0.8rem; color: #F8FAFC; font-weight: 600;">HR Administrator</p>
+                            <p style="margin: 0; font-size: 0.65rem; color: #64748B;">Enterprise Edition</p>
+                        </div>
+                    </div>
+                    <div style="color: #64748B; cursor: pointer;">
+                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"></path></svg>
                     </div>
                 </div>
-                <div style="color: #64748B; cursor: pointer;">
-                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"></path></svg>
-                </div>
-            </div>
-        ''', unsafe_allow_html=True)
+            ''', unsafe_allow_html=True)
 
 def render_risk_overview(df):
     kpi_col1, kpi_col2, kpi_col3 = st.columns(3)
@@ -692,7 +1214,7 @@ def render_risk_overview(df):
     kpi_col1.markdown(f'''
     <div class="kpi-card" style="
         background: linear-gradient(145deg, rgba(17, 24, 39, 0.7) 0%, rgba(11, 14, 20, 0.9) 100%);
-        backdrop-filter: blur(20px);
+        backdrop-filter: blur(8px);
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         border: 1px solid rgba(255, 255, 255, 0.05);
         border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -720,7 +1242,7 @@ def render_risk_overview(df):
     kpi_col2.markdown(f'''
     <div class="kpi-card" style="
         background: linear-gradient(145deg, rgba(17, 24, 39, 0.7) 0%, rgba(11, 14, 20, 0.9) 100%);
-        backdrop-filter: blur(20px);
+        backdrop-filter: blur(8px);
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         border: 1px solid rgba(255, 255, 255, 0.05);
         border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -749,7 +1271,7 @@ def render_risk_overview(df):
     kpi_col3.markdown(f'''
     <div class="kpi-card" style="
         background: linear-gradient(145deg, rgba(17, 24, 39, 0.7) 0%, rgba(11, 14, 20, 0.9) 100%);
-        backdrop-filter: blur(20px);
+        backdrop-filter: blur(8px);
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         border: 1px solid rgba(255, 255, 255, 0.05);
         border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -775,76 +1297,67 @@ def render_risk_overview(df):
     
     st.markdown('<div style="margin-bottom: 32px;"></div>', unsafe_allow_html=True)
 
-    # Risk Stratification Bins
-    bins = [0, 25, 50, 75, 100]
-    labels = ['Low', 'Medium', 'High', 'Critical']
-    df['RiskStratification'] = pd.cut(df['RiskPercentage'], bins=bins, labels=labels, include_lowest=True)
+    tenure_agg, hours_agg, strat_counts, heat_pivot, driver_dept, _risk_strat = _chart_aggregates(df)
 
     st.markdown("#### **Risk Insights**")
-    
-    # -----------------------------
-    # Information Hierarchy: Tabs
-    # -----------------------------
-    tab1, tab2, tab3 = st.tabs(["📊 Demographics & Trends", "⭕ Risk Composition", "🗺️ Organizational Heatmaps"])
-    
-    # Common layout update for charts to make them look premium
+
+    insight_tab = st.radio(
+        "Insight view",
+        ["📊 Demographics & Trends", "⭕ Risk Composition", "🗺️ Organizational Heatmaps"],
+        horizontal=True,
+        label_visibility="collapsed",
+        key="risk_insight_tab",
+    )
+
     chart_layout = dict(
-        plot_bgcolor='rgba(0,0,0,0)', 
+        plot_bgcolor='rgba(0,0,0,0)',
         paper_bgcolor='rgba(0,0,0,0)',
-        font=dict(family='Outfit', color='#64748B'),
-        title_font=dict(size=18, color='#F8FAFC', family='Outfit'),
+        font=dict(family='Inter', color='#64748B'),
+        title_font=dict(size=18, color='#F8FAFC', family='Inter'),
         xaxis=dict(showgrid=False, zeroline=False, showline=False, color='#475569', title_font=dict(size=12, color='#64748B')),
         yaxis=dict(showgrid=True, gridcolor='rgba(255,255,255,0.02)', zeroline=False, showline=False, color='#475569', title_font=dict(size=12, color='#64748B')),
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, font=dict(color='#94A3B8'))
     )
 
-    with tab1:
+    if insight_tab == "📊 Demographics & Trends":
         row1_col1, row1_col2 = st.columns([0.6, 0.4])
         with row1_col1:
             with st.container(border=True):
-                # Area Chart: Risk Progression by Tenure Band
-                tenure_agg = df.groupby('Tenure', as_index=False)['RiskPercentage'].mean()
-                fig_area = px.area(tenure_agg, x='Tenure', y='RiskPercentage', 
-                                   title='Risk Progression by Tenure', 
+                fig_area = px.area(tenure_agg, x='Tenure', y='RiskPercentage',
+                                   title='Risk Progression by Tenure',
                                    color_discrete_sequence=['#3B82F6'],
                                    template='plotly_dark')
-                # Spline smoothing & gradient styling
                 fig_area.update_traces(line_shape='spline', fillcolor='rgba(59, 130, 246, 0.2)', line=dict(width=4))
                 fig_area.update_layout(**chart_layout, height=420, margin=dict(l=30, r=30, t=70, b=30))
-                st.plotly_chart(fig_area, use_container_width=True)
+                st.plotly_chart(fig_area, use_container_width=True, config=PLOTLY_CONFIG)
 
         with row1_col2:
             with st.container(border=True):
-                # Line Chart: Average Risk vs Monthly Hours
-                hours_agg = df.groupby('MonthlyHours', as_index=False)['RiskPercentage'].mean()
-                fig_line = px.line(hours_agg, x='MonthlyHours', y='RiskPercentage', 
+                fig_line = px.line(hours_agg, x='MonthlyHours', y='RiskPercentage',
                                    title='Avg Risk Trend vs Monthly Hours',
                                    color_discrete_sequence=['#F43F5E'],
                                    template='plotly_dark')
                 fig_line.update_traces(line_shape='spline', line=dict(width=4))
                 fig_line.update_layout(**chart_layout, height=420, margin=dict(l=30, r=30, t=70, b=30))
-                st.plotly_chart(fig_line, use_container_width=True)
+                st.plotly_chart(fig_line, use_container_width=True, config=PLOTLY_CONFIG)
 
-    with tab2:
+    elif insight_tab == "⭕ Risk Composition":
         row2_col1, row2_col2 = st.columns([0.4, 0.6])
         with row2_col1:
             with st.container(border=True):
-                # Donut Chart
-                strat_counts = df['RiskStratification'].value_counts().reset_index()
-                strat_counts.columns = ['Risk Level', 'Count']
-                fig_donut = px.pie(strat_counts, values='Count', names='Risk Level', 
+                fig_donut = px.pie(strat_counts, values='Count', names='Risk Level',
                                    title='Workforce Risk Distribution', hole=0.75,
                                    color='Risk Level',
                                    color_discrete_map={'Low':'#10B981', 'Medium':'#F59E0B', 'High':'#F97316', 'Critical':'#EF4444'},
                                    template='plotly_dark')
                 fig_donut.update_layout(
                     plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
-                    font=dict(family='Outfit', color='#94A3B8'),
+                    font=dict(family='Inter', color='#94A3B8'),
                     showlegend=False, height=420, margin=dict(l=30, r=30, t=70, b=30),
                     annotations=[dict(text='Risk', x=0.5, y=0.5, font_size=24, showarrow=False, font_color='#FFFFFF')]
                 )
                 fig_donut.update_traces(textposition='outside', textinfo='percent+label')
-                event_donut = st.plotly_chart(fig_donut, use_container_width=True, on_select="rerun")
+                event_donut = st.plotly_chart(fig_donut, use_container_width=True, on_select="rerun", config=PLOTLY_CONFIG)
                 if event_donut and len(event_donut.get("selection", {}).get("points", [])) > 0:
                     pt = event_donut["selection"]["points"][0]
                     label = pt.get("label") or pt.get("point_label") or pt.get("pointNumber")
@@ -852,61 +1365,52 @@ def render_risk_overview(df):
                         label = strat_counts.iloc[pt["pointNumber"]]['Risk Level']
                     if label:
                         st.session_state.pending_query = f"Summarize the employees in the {label} risk tier."
-                        st.rerun()
 
         with row2_col2:
             with st.container(border=True):
-                # Histogram Density
-                fig_hist = px.histogram(df, x='RiskPercentage', nbins=40, 
+                fig_hist = px.histogram(df, x='RiskPercentage', nbins=30,
                                         title='Risk Score Distribution Density',
-                                        marginal='box',
                                         color_discrete_sequence=['#8B5CF6'],
                                         template='plotly_dark')
                 fig_hist.update_traces(marker=dict(line=dict(width=0)))
                 fig_hist.update_layout(**chart_layout, height=420, margin=dict(l=30, r=30, t=70, b=30), bargap=0.1)
-                st.plotly_chart(fig_hist, use_container_width=True)
+                st.plotly_chart(fig_hist, use_container_width=True, config=PLOTLY_CONFIG)
 
-    with tab3:
+    else:
         row3_col1, row3_col2 = st.columns(2)
         with row3_col1:
             with st.container(border=True):
-                # Heatmap: Department vs Role Risk
-                heat_agg = df.groupby(['Department', 'Role'], as_index=False)['RiskPercentage'].mean()
-                heat_pivot = heat_agg.pivot(index='Department', columns='Role', values='RiskPercentage').fillna(0)
                 colorscale = [[0, '#0B0E14'], [0.5, '#6B21A8'], [1, '#EF4444']]
-                fig_heat = px.imshow(heat_pivot, text_auto=".1f", aspect="auto", 
+                fig_heat = px.imshow(heat_pivot, text_auto=".1f", aspect="auto",
                                      title="Department vs. Role Risk Grid",
                                      color_continuous_scale=colorscale,
                                      template='plotly_dark')
                 fig_heat.update_layout(
                     plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
-                    font=dict(family='Outfit', color='#94A3B8'),
+                    font=dict(family='Inter', color='#94A3B8'),
                     height=420, margin=dict(l=30, r=30, t=70, b=30)
                 )
                 fig_heat.update_xaxes(showgrid=False)
                 fig_heat.update_yaxes(showgrid=False)
-                event_heat = st.plotly_chart(fig_heat, use_container_width=True, on_select="rerun")
+                event_heat = st.plotly_chart(fig_heat, use_container_width=True, on_select="rerun", config=PLOTLY_CONFIG)
                 if event_heat and len(event_heat.get("selection", {}).get("points", [])) > 0:
                     pt = event_heat["selection"]["points"][0]
-                    y_val = pt.get("y")  # Department
+                    y_val = pt.get("y")
                     if y_val:
                         st.session_state.pending_query = f"Analyze flight risk in the {y_val} department."
-                        st.rerun()
 
         with row3_col2:
             with st.container(border=True):
-                # Parallel Categories
-                driver_dept = df[['Driver1', 'Department']].dropna()
                 fig_parallel = px.parallel_categories(driver_dept, dimensions=['Driver1', 'Department'],
                                                       title="Top Driver Cascade to Business Unit",
                                                       color_continuous_scale="Purples",
                                                       template='plotly_dark')
                 fig_parallel.update_layout(
                     plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
-                    font=dict(family='Outfit', color='#94A3B8'),
+                    font=dict(family='Inter', color='#94A3B8'),
                     height=420, margin=dict(l=30, r=30, t=70, b=30)
                 )
-                st.plotly_chart(fig_parallel, use_container_width=True)
+                st.plotly_chart(fig_parallel, use_container_width=True, config=PLOTLY_CONFIG)
 
 def render_top_drivers(df):
     st.markdown("#### **Top Attrition Drivers Distribution**")
@@ -919,13 +1423,12 @@ def render_top_drivers(df):
         fig = px.bar(driver_counts.head(10), x='Count', y='Driver', orientation='h', 
                      color='Count', color_continuous_scale="Reds")
         fig.update_layout(yaxis={'categoryorder':'total ascending'}, margin=dict(l=0, r=0, t=30, b=0), height=400, plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', template='plotly_dark')
-        event_drivers = st.plotly_chart(fig, use_container_width=True, on_select="rerun")
+        event_drivers = st.plotly_chart(fig, use_container_width=True, on_select="rerun", config=PLOTLY_CONFIG)
         if event_drivers and len(event_drivers.get("selection", {}).get("points", [])) > 0:
             pt = event_drivers["selection"]["points"][0]
             driver = pt.get("y")
             if driver:
                 st.session_state.pending_query = f"Why is {driver} a top attrition driver?"
-                st.rerun()
 
 def render_high_risk_roster(df):
     st.markdown("#### **High Risk Roster (Action Required)**")
@@ -955,16 +1458,7 @@ def render_high_risk_roster(df):
 def render_executive_summary(df, slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, target_email):
     st.markdown("#### **Departmental Macro Metrics**")
 
-    def get_top_driver(series):
-        return series.mode()[0] if not series.mode().empty else "N/A"
-
-    macro_metrics = df.groupby('Department').agg(
-        Average_Risk=('RiskPercentage', 'mean'),
-        High_Risk_Count=('RiskPercentage', lambda x: (x > 75).sum()),
-        Top_Driver=('Driver1', get_top_driver)
-    ).reset_index()
-
-    macro_metrics['Average_Risk'] = macro_metrics['Average_Risk'].round(1)
+    macro_metrics, inference_text = _build_macro_metrics(df)
 
     with st.container(border=True):
         st.dataframe(
@@ -978,13 +1472,6 @@ def render_executive_summary(df, slack_url, smtp_host, smtp_port, smtp_user, smt
             hide_index=True,
             use_container_width=True
         )
-
-    highest_risk_dept = macro_metrics.loc[macro_metrics['Average_Risk'].idxmax()]
-
-    inference_text = (
-        f"The **{highest_risk_dept['Department']}** segment displays disproportionate "
-        f"flight risk ({highest_risk_dept['Average_Risk']}% avg) primarily driven by **{highest_risk_dept['Top_Driver']}**."
-    )
 
     st.markdown(f'''
     <div style="
@@ -1009,22 +1496,26 @@ def render_executive_summary(df, slack_url, smtp_host, smtp_port, smtp_user, smt
     st.markdown("---")
     exec_col1, exec_col2 = st.columns(2)
 
-    pdf_bytes = generate_executive_pdf(macro_metrics, inference_text)
+    metrics_json = macro_metrics.to_json(orient="records")
 
     with exec_col1:
-        st.download_button(
-            label="📄 Export Executive PDF",
-            data=pdf_bytes,
-            file_name="executive_summary.pdf",
-            mime="application/pdf",
-            key="export_exec_pdf"
-        )
+        if st.button("📄 Prepare Executive PDF", key="prep_exec_pdf", use_container_width=True):
+            st.session_state["_exec_pdf_bytes"] = _cached_exec_pdf(metrics_json, inference_text)
+        if st.session_state.get("_exec_pdf_bytes"):
+            st.download_button(
+                label="⬇️ Download Executive PDF",
+                data=st.session_state["_exec_pdf_bytes"],
+                file_name="executive_summary.pdf",
+                mime="application/pdf",
+                key="export_exec_pdf",
+                use_container_width=True,
+            )
     with exec_col2:
-        if st.button("📧 Email Report to HR Leads", key="email_exec_pdf"):
+        if st.button("📧 Email Report to HR Leads", key="email_exec_pdf", use_container_width=True):
             if not smtp_host or smtp_host == "smtp.example.com":
                 st.toast("⚠️ Please configure SMTP settings in the Configuration popover to send emails.", icon="⚠️")
             else:
-                pdf_bytes = generate_executive_pdf(df)
+                pdf_bytes = _cached_exec_pdf(metrics_json, inference_text)
                 success = send_manager_email(
                     target_email=target_email,
                     subject="Executive Summary: HR Attrition Risk",
@@ -1131,10 +1622,14 @@ def render_dashboard(col_dash, df, slack_url, smtp_host, smtp_port, smtp_user, s
                                                 ml_df = new_df[[c for c in ml_cols if c in new_df.columns]]
                                                 ml_df.to_sql('attrition_scores', conn, if_exists='replace', index=False)
                                         
-                                        # Clear cache for the export PDF function
-                                        st.cache_data.clear()
+                                        # Clear only data cache (not all caches)
+                                        load_risk_data.clear()
+                                        _chart_aggregates.clear()
+                                        _cached_exec_pdf.clear()
                                         
                                     st.session_state.last_uploaded = file_key
+                                    st.session_state.pop("_dash_pdf_bytes", None)
+                                    st.session_state.pop("_exec_pdf_bytes", None)
                                     st.success("Database synced successfully! 🚀")
                                     st.rerun()
                                 except Exception as e:
@@ -1143,29 +1638,26 @@ def render_dashboard(col_dash, df, slack_url, smtp_host, smtp_port, smtp_user, s
                                 st.success("Database synced successfully! 🚀")
                 
                 with tb_col4:
-                    @st.cache_data(show_spinner=False)
-                    def get_cached_pdf(current_df):
-                        def get_top_driver(series):
-                            return series.mode()[0] if not series.mode().empty else "N/A"
-                        
-                        metrics = current_df.groupby('Department').agg(
-                            Average_Risk=('RiskPercentage', 'mean'),
-                            High_Risk_Count=('RiskPercentage', lambda x: (x > 75).sum()),
-                            Top_Driver=('Driver1', get_top_driver)
-                        ).reset_index()
-                        metrics['Average_Risk'] = metrics['Average_Risk'].round(1)
-                        highest = metrics.loc[metrics['Average_Risk'].idxmax()]
-                        inf_text = (f"The **{highest['Department']}** segment displays disproportionate "
-                                    f"risk exposure (Avg: {highest['Average_Risk']}%), driven primarily by "
-                                    f"{highest['Top_Driver']}. We recommend immediate qualitative assessments "
-                                    f"for the {highest['High_Risk_Count']} high-risk individuals.")
-                        return generate_executive_pdf(metrics, inf_text)
-                    
-                    try:
-                        pdf_data = get_cached_pdf(df)
-                        st.download_button("📤 Export", data=pdf_data, file_name="dashboard_export.pdf", mime="application/pdf", use_container_width=True, key="tb_export")
-                    except Exception as e:
-                        st.button("📤 Export", use_container_width=True, disabled=True, key="tb_export_disabled", help=f"PDF export unavailable: {e}")
+                    if st.button("📤 Export", use_container_width=True, key="tb_export_gen"):
+                        try:
+                            metrics, inf_text = _build_macro_metrics(df)
+                            st.session_state["_dash_pdf_bytes"] = _cached_exec_pdf(
+                                metrics.to_json(orient="records"), inf_text
+                            )
+                            st.session_state.pop("_dash_pdf_error", None)
+                        except Exception as e:
+                            st.session_state["_dash_pdf_error"] = str(e)
+                    if st.session_state.get("_dash_pdf_bytes"):
+                        st.download_button(
+                            "⬇️ PDF",
+                            data=st.session_state["_dash_pdf_bytes"],
+                            file_name="dashboard_export.pdf",
+                            mime="application/pdf",
+                            use_container_width=True,
+                            key="tb_export_dl",
+                        )
+                    elif st.session_state.get("_dash_pdf_error"):
+                        st.caption("Export unavailable")
                 
                 st.markdown("<div style='margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.05);'></div>", unsafe_allow_html=True)
 
@@ -1191,13 +1683,13 @@ def render_chat_panel(col_chat, slack_url, smtp_host, smtp_port, smtp_user, smtp
         recent_title_attr = "" if has_recent else 'title="No recent conversations..."'
 
         st.markdown(f'''
-        <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; margin-bottom: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 4px; padding-bottom: 12px; margin-bottom: 16px; flex-shrink: 0;">
             <div style="display: flex; align-items: center; gap: 8px;">
-                <div style="background: rgba(124, 58, 237, 0.2); width: 32px; height: 32px; border-radius: 50%; color: #A78BFA; display: flex; align-items: center; justify-content: center;">
+                <div style="background: rgba(124, 58, 237, 0.2); width: 32px; height: 32px; min-height: 32px; border-radius: 50%; color: #A78BFA; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
                 </div>
-                <h3 style="margin: 0; color: #F8FAFC; font-size: 1.1rem; font-weight: 700;">AI Assistant</h3>
-                <span style="background: #7C3AED; color: #FFFFFF; font-size: 0.6rem; font-weight: 700; padding: 2px 8px; border-radius: 12px;">BETA</span>
+                <h3 style="margin: 0; padding: 0; color: #F8FAFC; font-size: 1.1rem; font-weight: 700; line-height: 1.3; white-space: nowrap;">AI Assistant</h3>
+                <span style="background: #7C3AED; color: #FFFFFF; font-size: 0.6rem; font-weight: 700; padding: 2px 8px; border-radius: 12px; line-height: 1.2;">BETA</span>
             </div>
             <span style="color: #64748B; cursor: pointer; font-size: 1.2rem;">✕</span>
         </div>
@@ -1218,15 +1710,14 @@ def render_chat_panel(col_chat, slack_url, smtp_host, smtp_port, smtp_user, smtp
         else:
             st.markdown('<div class="history-marker" style="display:none"></div>', unsafe_allow_html=True)
             chat_container = render_chat_history(slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, target_email)
-            render_chat_input(chat_container)
-            
-            # Footer disclaimer
+            # Disclaimer above input so it is never clipped by the panel bottom edge
             st.markdown('''
-            <div style="background: rgba(30, 41, 59, 0.4); border-radius: 8px; padding: 12px; margin-top: 24px; display: flex; align-items: flex-start; gap: 8px; color: #94A3B8; font-size: 0.75rem;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M12 8v4"></path><path d="M12 16h.01"></path></svg>
-                <span>AI responses may not be 100% accurate.<br>Please verify important insights.</span>
+            <div class="chat-disclaimer-footer" style="background: rgba(30, 41, 59, 0.4); border-radius: 8px; padding: 10px 12px; display: flex; align-items: flex-start; gap: 8px; color: #94A3B8; font-size: 0.75rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 1px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M12 8v4"></path><path d="M12 16h.01"></path></svg>
+                <span>AI responses may not be 100% accurate. Please verify important insights.</span>
             </div>
             ''', unsafe_allow_html=True)
+            render_chat_input(chat_container)
 
 def render_chat_history(slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, target_email):
     # Display chat messages from history
@@ -1247,23 +1738,29 @@ def render_chat_history(slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, t
                 
                 st.markdown(msg["content"])
 
-                if msg["role"] == "assistant" and idx > 0:
-                    st.markdown("<div style='margin-top: 4px;'></div>", unsafe_allow_html=True)
-                    
-                    btn_col1, btn_col2, btn_col3 = st.columns(3)
+                # Action buttons only on the latest assistant message (cuts widget/DOCX cost)
+                is_last_assistant = (
+                    msg["role"] == "assistant"
+                    and idx == max((i for i, m in enumerate(current_messages) if m["role"] == "assistant"), default=-1)
+                )
+                if is_last_assistant and idx > 0:
+                    st.markdown("<div style='margin-top: 8px;'></div>", unsafe_allow_html=True)
 
+                    # Action row — short labels, small gap (fits narrow chat column)
+                    btn_col1, btn_col2, btn_col3 = st.columns(3, gap="small")
                     with btn_col1:
-                        docx_bytes = create_mitigation_docx(msg["content"])
+                        docx_bytes = _cached_docx(msg["content"])
                         st.download_button(
-                            label="📥 DOCX",
+                            label="DOCX",
                             data=docx_bytes,
                             file_name=f"chat_export_{idx}.docx",
                             mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                             key=f"docx_{idx}",
-                            use_container_width=True
+                            use_container_width=True,
+                            icon=":material/description:",
                         )
                     with btn_col2:
-                        if st.button("📧 Email", key=f"pdf_{idx}", help="Email to Manager", use_container_width=True):
+                        if st.button("Email", key=f"pdf_{idx}", use_container_width=True, icon=":material/mail:"):
                             if not smtp_host or smtp_host == "smtp.example.com":
                                 st.toast("⚠️ Please configure SMTP settings in the Configuration popover to send emails.", icon="⚠️")
                             else:
@@ -1281,17 +1778,17 @@ def render_chat_history(slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, t
                                 else:
                                     st.error("Failed to send email.")
                     with btn_col3:
-                        if st.button("💬 Slack", key=f"alert_{idx}", help="Send Slack Alert", use_container_width=True):
+                        if st.button("Slack", key=f"alert_{idx}", use_container_width=True, icon=":material/chat:"):
                             if not slack_url or not slack_url.startswith("https://hooks.slack.com"):
                                 st.toast("⚠️ Please configure your Slack Webhook URL in settings.", icon="⚠️")
                             else:
                                 import re
                                 emp_match = re.search(r'EMP\d{4}', msg["content"])
                                 employee_id = emp_match.group(0) if emp_match else "Multiple / General Insights"
-                                
+
                                 risk_match = re.search(r'(\d{2,3}\.\d)%', msg["content"])
                                 risk_score = float(risk_match.group(1)) if risk_match else "N/A"
-                                
+
                                 content_clean = msg["content"].replace("*", "")
                                 note_snippet = content_clean[:800] + ("..." if len(content_clean) > 800 else "")
 
@@ -1306,23 +1803,25 @@ def render_chat_history(slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, t
                                 else:
                                     st.error("Failed to send Slack alert.")
 
-                    # Follow-up Chips
-                    st.markdown("<div style='margin-top: 16px; margin-bottom: 8px; color: #94A3B8; font-size: 0.8rem; font-weight: 500;'>✨ Suggested Follow-up</div>", unsafe_allow_html=True)
-                    f_col1, f_col2 = st.columns(2)
-                    with f_col1:
+                    # Follow-ups: one button per cell (avoids stacked-column overlap)
+                    st.markdown(
+                        "<div style='margin-top: 12px; margin-bottom: 6px; color: #94A3B8; font-size: 0.8rem; font-weight: 500;'>✨ Suggested Follow-up</div>",
+                        unsafe_allow_html=True,
+                    )
+                    fu_r1c1, fu_r1c2 = st.columns(2, gap="small")
+                    with fu_r1c1:
                         if st.button("Show Employees", key=f"fu1_{idx}", use_container_width=True):
                             st.session_state.pending_query = "Show the employees for this analysis"
-                            st.rerun()
-                        if st.button("Email Manager", key=f"fu3_{idx}", use_container_width=True):
-                            st.session_state.pending_query = "Draft an email to the manager"
-                            st.rerun()
-                    with f_col2:
+                    with fu_r1c2:
                         if st.button("Compare Depts", key=f"fu2_{idx}", use_container_width=True):
                             st.session_state.pending_query = "Compare risk across departments"
-                            st.rerun()
+                    fu_r2c1, fu_r2c2 = st.columns(2, gap="small")
+                    with fu_r2c1:
+                        if st.button("Email Manager", key=f"fu3_{idx}", use_container_width=True):
+                            st.session_state.pending_query = "Draft an email to the manager"
+                    with fu_r2c2:
                         if st.button("Create Plan", key=f"fu4_{idx}", use_container_width=True):
                             st.session_state.pending_query = "Create a retention action plan"
-                            st.rerun()
 
         # Empty state / Suggested Questions
         if not current_messages:
@@ -1331,24 +1830,14 @@ def render_chat_history(slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, t
             q3 = "💬 What impact will attrition have on our business?"
             q4 = "💬 Compare risk trends with previous quarter"
             
-            st.button(q1, key="suggested_1", use_container_width=True)
-            st.button(q2, key="suggested_2", use_container_width=True)
-            st.button(q3, key="suggested_3", use_container_width=True)
-            st.button(q4, key="suggested_4", use_container_width=True)
-            
-            # Check if they were clicked
-            if st.session_state.get('suggested_1'):
+            if st.button(q1, key="suggested_1", use_container_width=True):
                 st.session_state.pending_query = q1.replace("💬 ", "")
-                st.rerun()
-            if st.session_state.get('suggested_2'):
+            if st.button(q2, key="suggested_2", use_container_width=True):
                 st.session_state.pending_query = q2.replace("💬 ", "")
-                st.rerun()
-            if st.session_state.get('suggested_3'):
+            if st.button(q3, key="suggested_3", use_container_width=True):
                 st.session_state.pending_query = q3.replace("💬 ", "")
-                st.rerun()
-            if st.session_state.get('suggested_4'):
+            if st.button(q4, key="suggested_4", use_container_width=True):
                 st.session_state.pending_query = q4.replace("💬 ", "")
-                st.rerun()
 
     return chat_container
 
@@ -1398,6 +1887,7 @@ def render_chat_input(chat_container):
                     except Exception as e:
                         st.error(f"Error during execution: {e}")
 
+@st.cache_data(show_spinner=False)
 def load_risk_data():
     project_root = Path(__file__).parent.parent.parent
     db_path = project_root / 'hr_data.db'
