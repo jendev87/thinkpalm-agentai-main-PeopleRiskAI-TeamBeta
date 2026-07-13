@@ -1159,21 +1159,23 @@ def render_sidebar(col_nav):
         """, unsafe_allow_html=True)
 
     with col_nav:
-        current_nav = st.session_state.get("active_navigation", "📊 Risk Overview")
-
         def nav_button(label, icon, target_state):
-            is_active = (current_nav == target_state)
+            is_active = (st.session_state.get("active_navigation", "📊 Risk Overview") == target_state)
             btn_type = "primary" if is_active else "secondary"
             slug = "nav_" + label.lower().replace(" ", "_")
-            if st.button(
+
+            def _set_nav(ts=target_state):
+                st.session_state.active_navigation = ts
+
+            st.button(
                 label,
                 icon=icon,
                 key=slug,
                 type=btn_type,
                 use_container_width=True,
                 help=None,
-            ):
-                st.session_state.active_navigation = target_state
+                on_click=_set_nav,
+            )
 
         # 2. Analytics Section
         if not collapsed:
@@ -2096,7 +2098,6 @@ def render_chat_panel(col_chat, df, slack_url, smtp_host, smtp_port, smtp_user, 
                 <span>AI responses may not be 100% accurate. Please verify important insights.</span>
             </div>
             ''', unsafe_allow_html=True)
-            render_chat_input(chat_container)
 
 def render_chat_history(slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, target_email):
     # Display chat messages from history
