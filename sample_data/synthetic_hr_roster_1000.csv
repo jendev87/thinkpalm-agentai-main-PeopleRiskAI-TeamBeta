@@ -1,0 +1,1001 @@
+EmployeeID,Tenure,Department,Role,MonthlyHours,LastPromotion,Salary,Attrition,RiskPercentage,Driver1,Driver2,Driver3
+EMP0001,8,Marketing,Marketing Specialist,181,1,54367.85,0,68.7,Tenure,Salary,MonthlyHours
+EMP0002,47,Sales,Account Executive,174,41,51306.64,1,50.7,Tenure,Salary,Role Overload
+EMP0003,71,Engineering,Staff Engineer,166,17,132955.42,1,59.1,Tenure,LastPromotion,Role Overload
+EMP0004,42,Operations,Director of Operations,190,34,203652.43,0,43.7,Tenure,MonthlyHours,Market Competitiveness
+EMP0005,2,Operations,Operations Manager,171,1,130793.09,0,52.0,Role Overload,MonthlyHours,Salary
+EMP0006,50,Sales,VP of Sales,209,24,159665.42,0,70.7,Tenure,LastPromotion,Market Competitiveness
+EMP0007,20,Engineering,Staff Engineer,150,10,102953.7,0,32.0,LastPromotion,Salary,Role Overload
+EMP0008,89,Operations,Operations Specialist,171,32,51779.63,0,66.6,Market Competitiveness,Tenure,Salary
+EMP0009,18,Finance,Accountant,159,13,63826.28,0,62.8,Role Overload,Salary,Tenure
+EMP0010,30,Engineering,Engineering Manager,162,6,111415.32,0,44.2,Salary,Tenure,MonthlyHours
+EMP0011,77,Finance,Financial Analyst,151,52,74400.9,0,63.9,MonthlyHours,Tenure,Role Overload
+EMP0012,82,Operations,Director of Operations,163,56,185338.31,0,51.7,Tenure,Salary,LastPromotion
+EMP0013,24,Finance,Accountant,157,23,76401.47,0,49.1,MonthlyHours,Role Overload,Salary
+EMP0014,43,Operations,Operations Manager,162,16,105671.24,1,44.6,Salary,MonthlyHours,Tenure
+EMP0015,6,Finance,Financial Analyst,179,3,52263.89,0,54.9,Market Competitiveness,MonthlyHours,Salary
+EMP0016,62,HR,HR Manager,167,58,102460.74,0,58.8,Tenure,Salary,Role Overload
+EMP0017,10,Finance,Finance Manager,158,0,110902.88,0,44.7,Salary,Role Overload,Market Competitiveness
+EMP0018,29,Operations,Director of Operations,158,15,197205.55,0,47.4,MonthlyHours,Market Competitiveness,Role Overload
+EMP0019,30,HR,VP of HR,171,8,164444.67,0,41.8,Tenure,Market Competitiveness,Salary
+EMP0020,69,Engineering,Engineering Manager,186,47,99058.86,0,72.9,Tenure,MonthlyHours,Market Competitiveness
+EMP0021,22,Operations,Operations Manager,173,15,124859.66,0,36.2,Market Competitiveness,Salary,Role Overload
+EMP0022,17,Marketing,Marketing Manager,160,5,134155.71,0,31.8,Role Overload,LastPromotion,Tenure
+EMP0023,40,Engineering,Engineering Manager,168,18,117880.17,0,45.0,MonthlyHours,Market Competitiveness,Salary
+EMP0024,78,HR,Recruiter,183,30,76981.36,1,20.6,Salary,Tenure,MonthlyHours
+EMP0025,17,Finance,VP of Finance,190,2,179904.28,0,36.6,Tenure,Role Overload,LastPromotion
+EMP0026,49,Operations,Operations Manager,190,47,117112.8,0,65.5,Role Overload,LastPromotion,Tenure
+EMP0027,26,Sales,VP of Sales,195,0,144965.86,0,60.1,Salary,Tenure,Role Overload
+EMP0028,4,Marketing,Growth Hacker,166,0,54341.17,1,55.8,MonthlyHours,Salary,LastPromotion
+EMP0029,63,Marketing,Growth Hacker,160,32,73180.33,0,36.7,Market Competitiveness,Tenure,Salary
+EMP0030,29,Marketing,Growth Hacker,194,12,77147.03,0,68.3,Salary,Role Overload,Market Competitiveness
+EMP0031,3,Marketing,Growth Hacker,181,0,51629.42,1,63.7,Market Competitiveness,Salary,Role Overload
+EMP0032,27,Engineering,Engineering Manager,162,22,96908.65,0,59.2,LastPromotion,Market Competitiveness,Tenure
+EMP0033,2,HR,VP of HR,170,1,193435.51,0,58.7,MonthlyHours,Role Overload,Market Competitiveness
+EMP0034,108,Operations,Operations Manager,169,9,120034.4,0,45.2,Tenure,Salary,MonthlyHours
+EMP0035,32,Engineering,Engineering Manager,175,17,117934.68,0,46.6,LastPromotion,Salary,Tenure
+EMP0036,117,Finance,Accountant,166,7,60791.11,0,57.1,Role Overload,Salary,Tenure
+EMP0037,43,Marketing,Growth Hacker,187,35,61702.49,1,58.1,MonthlyHours,Salary,Market Competitiveness
+EMP0038,48,Finance,Accountant,168,31,59542.5,1,49.5,Salary,Market Competitiveness,MonthlyHours
+EMP0039,4,Engineering,Staff Engineer,174,3,110584.72,0,49.3,Salary,Market Competitiveness,Role Overload
+EMP0040,16,Finance,VP of Finance,175,3,180140.65,0,42.7,LastPromotion,Salary,Tenure
+EMP0041,51,Finance,Accountant,183,44,76066.01,1,61.3,Tenure,LastPromotion,MonthlyHours
+EMP0042,45,Sales,Sales Manager,175,37,98364.27,0,40.8,Role Overload,LastPromotion,MonthlyHours
+EMP0043,26,Operations,Operations Specialist,180,12,60377.98,0,40.4,Market Competitiveness,MonthlyHours,Salary
+EMP0044,18,Finance,Accountant,158,6,62164.65,0,63.3,Tenure,Salary,Role Overload
+EMP0045,5,Marketing,VP of Marketing,193,4,156625.45,0,67.7,MonthlyHours,Salary,Market Competitiveness
+EMP0046,59,Sales,Account Executive,174,46,74952.01,0,58.9,Tenure,Role Overload,Market Competitiveness
+EMP0047,27,Marketing,Marketing Specialist,195,0,67571.63,0,69.6,Market Competitiveness,Role Overload,Salary
+EMP0048,5,HR,VP of HR,159,3,172458.89,0,35.1,Market Competitiveness,MonthlyHours,Tenure
+EMP0049,22,Marketing,VP of Marketing,199,15,151383.19,1,45.1,Market Competitiveness,LastPromotion,Tenure
+EMP0050,4,Engineering,Senior Engineer,176,0,80791.01,0,50.4,Role Overload,Market Competitiveness,MonthlyHours
+EMP0051,50,Finance,Accountant,191,48,73473.2,0,71.2,Tenure,Salary,Market Competitiveness
+EMP0052,28,Marketing,Marketing Specialist,178,22,71531.65,1,41.9,Role Overload,Market Competitiveness,LastPromotion
+EMP0053,11,Engineering,Senior Engineer,160,0,100151.02,0,33.3,Tenure,MonthlyHours,Market Competitiveness
+EMP0054,27,HR,HR Manager,176,4,98536.33,0,51.5,LastPromotion,MonthlyHours,Salary
+EMP0055,85,Finance,Finance Manager,177,49,118596.71,0,55.5,Tenure,LastPromotion,Salary
+EMP0056,22,Engineering,Senior Engineer,170,9,105870.91,1,45.3,MonthlyHours,Role Overload,Tenure
+EMP0057,3,Engineering,Engineering Manager,175,1,108150.06,0,35.2,Salary,LastPromotion,Tenure
+EMP0058,44,Finance,Financial Analyst,182,24,75110.08,0,30.9,MonthlyHours,LastPromotion,Market Competitiveness
+EMP0059,7,Finance,Accountant,161,4,65364.03,0,34.4,MonthlyHours,Tenure,Market Competitiveness
+EMP0060,43,HR,HR Generalist,163,29,54395.38,0,57.1,MonthlyHours,Salary,Market Competitiveness
+EMP0061,8,Engineering,Staff Engineer,165,5,104444.66,0,27.7,LastPromotion,MonthlyHours,Role Overload
+EMP0062,6,Finance,VP of Finance,187,2,177247.94,0,44.7,Tenure,Market Competitiveness,LastPromotion
+EMP0063,18,Engineering,Staff Engineer,164,11,104328.66,0,29.2,Role Overload,Market Competitiveness,MonthlyHours
+EMP0064,4,Sales,Account Executive,209,3,66422.99,0,70.1,LastPromotion,MonthlyHours,Market Competitiveness
+EMP0065,11,Operations,Operations Manager,142,8,104489.07,0,39.8,Tenure,Role Overload,MonthlyHours
+EMP0066,7,HR,HR Generalist,136,3,77923.15,1,46.8,Tenure,Salary,Role Overload
+EMP0067,25,HR,Recruiter,186,1,65589.36,0,45.7,Market Competitiveness,Salary,Tenure
+EMP0068,45,Operations,Operations Manager,183,11,99593.47,0,31.9,LastPromotion,Tenure,MonthlyHours
+EMP0069,28,Marketing,Marketing Specialist,171,9,65360.89,0,35.9,Tenure,MonthlyHours,Market Competitiveness
+EMP0070,42,Engineering,Staff Engineer,181,23,119244.08,0,54.4,Market Competitiveness,MonthlyHours,LastPromotion
+EMP0071,170,Sales,VP of Sales,166,0,191878.45,0,27.6,Tenure,Salary,LastPromotion
+EMP0072,63,Marketing,Growth Hacker,165,13,64645.83,0,48.2,Tenure,Salary,Market Competitiveness
+EMP0073,23,HR,VP of HR,189,14,180424.04,0,31.6,Market Competitiveness,Tenure,MonthlyHours
+EMP0074,102,Finance,Financial Analyst,151,51,72232.71,0,66.4,Role Overload,Salary,Tenure
+EMP0075,45,Engineering,Software Engineer,166,3,65956.91,0,43.9,LastPromotion,Market Competitiveness,Role Overload
+EMP0076,18,Sales,Sales Manager,207,14,126891.81,0,50.7,MonthlyHours,Role Overload,Salary
+EMP0077,31,Finance,Finance Manager,184,19,102263.91,1,55.7,Tenure,LastPromotion,MonthlyHours
+EMP0078,6,Operations,Operations Specialist,169,3,66602.96,0,35.6,MonthlyHours,Salary,Tenure
+EMP0079,31,Operations,Operations Specialist,153,28,52918.92,1,73.9,LastPromotion,Salary,Role Overload
+EMP0080,8,Operations,Operations Manager,166,5,115753.52,0,49.5,MonthlyHours,Salary,LastPromotion
+EMP0081,1,Marketing,Marketing Specialist,158,0,65047.08,1,23.5,LastPromotion,Tenure,Role Overload
+EMP0082,10,Engineering,Engineering Manager,157,7,118105.28,0,38.5,Salary,MonthlyHours,LastPromotion
+EMP0083,9,Finance,Financial Analyst,175,0,76909.97,0,25.2,Role Overload,Salary,Tenure
+EMP0084,33,Engineering,Staff Engineer,174,18,108975.48,0,39.8,LastPromotion,MonthlyHours,Salary
+EMP0085,13,Finance,Financial Analyst,177,5,62341.36,0,73.2,LastPromotion,Salary,Tenure
+EMP0086,106,Sales,Sales Manager,152,45,116063.14,0,47.2,Market Competitiveness,Role Overload,Tenure
+EMP0087,10,Engineering,Software Engineer,184,7,52915.04,0,43.7,LastPromotion,Salary,Role Overload
+EMP0088,11,Operations,Director of Operations,184,10,207385.45,1,44.4,LastPromotion,Tenure,MonthlyHours
+EMP0089,37,Operations,Director of Operations,184,18,180812.91,0,44.7,LastPromotion,Market Competitiveness,Role Overload
+EMP0090,63,Finance,Financial Analyst,169,19,67476.17,0,39.0,Tenure,LastPromotion,Role Overload
+EMP0091,133,Finance,VP of Finance,168,29,174120.18,1,42.6,Tenure,Role Overload,Market Competitiveness
+EMP0092,44,Engineering,Engineering Manager,153,21,128397.21,1,35.3,MonthlyHours,LastPromotion,Market Competitiveness
+EMP0093,63,Sales,Sales Manager,194,40,105962.21,0,76.3,Tenure,Market Competitiveness,MonthlyHours
+EMP0094,6,Operations,Operations Manager,198,0,114770.95,0,75.7,LastPromotion,MonthlyHours,Role Overload
+EMP0095,16,HR,VP of HR,176,12,167250.69,0,37.8,Role Overload,Salary,Market Competitiveness
+EMP0096,24,Finance,Financial Analyst,181,4,63545.14,0,56.8,Salary,Tenure,Market Competitiveness
+EMP0097,33,HR,HR Manager,191,8,98005.51,0,53.0,LastPromotion,Market Competitiveness,Salary
+EMP0098,3,Finance,Finance Manager,188,0,100472.75,1,34.1,Market Competitiveness,Role Overload,MonthlyHours
+EMP0099,39,Sales,Sales Representative,186,24,75294.19,0,44.6,Market Competitiveness,Role Overload,LastPromotion
+EMP0100,265,Operations,Director of Operations,155,6,142376.22,0,66.1,Tenure,Market Competitiveness,Salary
+EMP0101,50,Sales,Account Executive,172,41,68047.31,0,48.4,Market Competitiveness,Salary,Tenure
+EMP0102,28,Finance,Accountant,142,6,58828.13,0,42.2,MonthlyHours,LastPromotion,Salary
+EMP0103,76,Sales,Account Executive,157,33,50595.54,1,31.3,Market Competitiveness,Salary,MonthlyHours
+EMP0104,2,HR,VP of HR,212,1,208885.84,0,53.5,MonthlyHours,Salary,Role Overload
+EMP0105,23,Engineering,Staff Engineer,185,17,104344.31,0,35.5,LastPromotion,Market Competitiveness,MonthlyHours
+EMP0106,41,Engineering,Software Engineer,188,23,63087.24,0,52.9,Market Competitiveness,Salary,MonthlyHours
+EMP0107,38,Marketing,Marketing Specialist,178,9,51314.47,0,79.6,Role Overload,Salary,MonthlyHours
+EMP0108,3,HR,Recruiter,168,1,63753.22,1,43.3,Role Overload,Salary,Tenure
+EMP0109,2,Sales,Sales Manager,140,0,100180.6,1,31.2,MonthlyHours,Market Competitiveness,Role Overload
+EMP0110,48,Engineering,Software Engineer,159,37,57273.11,0,46.5,MonthlyHours,Salary,Tenure
+EMP0111,3,Sales,VP of Sales,173,1,181468.54,0,51.9,Market Competitiveness,Role Overload,LastPromotion
+EMP0112,58,HR,VP of HR,187,47,189585.41,0,59.2,Tenure,Market Competitiveness,MonthlyHours
+EMP0113,7,HR,VP of HR,168,5,203609.09,0,31.7,LastPromotion,Market Competitiveness,MonthlyHours
+EMP0114,15,Sales,Account Executive,159,1,67752.16,0,41.5,Tenure,LastPromotion,Role Overload
+EMP0115,67,Engineering,Engineering Manager,156,36,99100.39,1,36.0,Tenure,Role Overload,MonthlyHours
+EMP0116,3,Engineering,Engineering Manager,146,1,97987.78,1,49.7,Salary,Tenure,MonthlyHours
+EMP0117,18,Marketing,Marketing Specialist,191,10,69132.27,0,55.4,Role Overload,MonthlyHours,LastPromotion
+EMP0118,7,Sales,Sales Representative,183,3,73518.52,0,49.9,Salary,Tenure,Market Competitiveness
+EMP0119,2,HR,VP of HR,180,0,184696.82,0,42.4,Salary,Market Competitiveness,LastPromotion
+EMP0120,10,Operations,Operations Manager,155,7,101369.83,0,54.4,Salary,Tenure,MonthlyHours
+EMP0121,52,HR,HR Generalist,159,23,75783.74,0,43.2,Tenure,Role Overload,LastPromotion
+EMP0122,42,Engineering,Senior Engineer,153,21,97459.14,0,36.8,Market Competitiveness,Salary,LastPromotion
+EMP0123,19,HR,VP of HR,192,5,203547.31,0,67.4,Market Competitiveness,Salary,LastPromotion
+EMP0124,9,HR,HR Generalist,191,1,59140.92,0,68.4,MonthlyHours,LastPromotion,Salary
+EMP0125,16,Sales,VP of Sales,183,14,154010.52,0,30.2,Salary,LastPromotion,Role Overload
+EMP0126,100,HR,Recruiter,174,49,76185.65,1,48.5,Role Overload,Tenure,MonthlyHours
+EMP0127,29,Finance,VP of Finance,194,2,142852.79,0,64.6,Tenure,Role Overload,LastPromotion
+EMP0128,24,Marketing,Marketing Specialist,150,13,59433.08,0,65.5,Tenure,Market Competitiveness,Salary
+EMP0129,10,Operations,Director of Operations,157,2,155439.28,0,45.6,MonthlyHours,Role Overload,Salary
+EMP0130,68,Operations,Operations Specialist,194,19,64135.66,0,82.6,Tenure,Role Overload,Salary
+EMP0131,33,Operations,Operations Manager,182,11,110353.89,0,51.3,Market Competitiveness,LastPromotion,Salary
+EMP0132,34,Marketing,VP of Marketing,153,1,152668.39,1,54.4,Market Competitiveness,MonthlyHours,LastPromotion
+EMP0133,33,Sales,Sales Manager,201,5,121084.93,0,68.8,Role Overload,Market Competitiveness,Tenure
+EMP0134,33,Engineering,Engineering Manager,152,30,104442.02,0,34.5,LastPromotion,MonthlyHours,Role Overload
+EMP0135,21,HR,Recruiter,183,0,57070.78,0,41.1,Salary,Market Competitiveness,Role Overload
+EMP0136,24,Sales,VP of Sales,179,14,200778.99,0,44.3,Tenure,MonthlyHours,Market Competitiveness
+EMP0137,10,Engineering,Staff Engineer,176,2,113087.96,1,35.2,LastPromotion,Salary,MonthlyHours
+EMP0138,19,Marketing,Growth Hacker,203,1,59047.66,1,72.9,Tenure,Salary,Role Overload
+EMP0139,6,HR,Recruiter,174,1,55273.77,0,56.2,LastPromotion,Tenure,Salary
+EMP0140,66,Operations,Operations Specialist,176,49,56836.12,0,73.6,Tenure,Salary,Market Competitiveness
+EMP0141,34,Marketing,Marketing Specialist,186,27,54460.05,0,73.2,MonthlyHours,Salary,LastPromotion
+EMP0142,4,Sales,Sales Representative,164,1,61315.93,0,51.7,Tenure,Salary,LastPromotion
+EMP0143,14,Sales,Sales Representative,169,13,65245.69,0,49.5,Role Overload,Market Competitiveness,MonthlyHours
+EMP0144,18,Sales,Sales Manager,150,16,112776.78,0,37.0,Tenure,Role Overload,Salary
+EMP0145,23,Operations,Operations Manager,188,15,128886.69,1,36.8,MonthlyHours,Market Competitiveness,LastPromotion
+EMP0146,28,Sales,Sales Manager,194,5,124875.03,0,65.6,Salary,LastPromotion,Market Competitiveness
+EMP0147,112,Sales,VP of Sales,156,3,205410.52,0,55.3,MonthlyHours,Market Competitiveness,Tenure
+EMP0148,96,HR,HR Manager,210,41,119413.35,0,84.8,Tenure,Market Competitiveness,Salary
+EMP0149,5,HR,HR Manager,178,0,117692.49,0,43.9,MonthlyHours,Tenure,Salary
+EMP0150,17,HR,Recruiter,158,12,66845.13,0,40.7,MonthlyHours,Role Overload,Salary
+EMP0151,17,Operations,Operations Manager,176,16,104474.82,0,42.7,Tenure,Market Competitiveness,Role Overload
+EMP0152,53,Engineering,Senior Engineer,170,4,85040.43,0,28.7,Tenure,LastPromotion,Role Overload
+EMP0153,14,HR,VP of HR,163,10,156236.3,0,33.6,MonthlyHours,LastPromotion,Market Competitiveness
+EMP0154,43,Finance,Finance Manager,152,38,123980.67,0,20.9,Tenure,Role Overload,Salary
+EMP0155,54,Operations,Director of Operations,186,35,153430.71,0,26.9,Tenure,LastPromotion,Role Overload
+EMP0156,40,Marketing,Growth Hacker,176,7,74642.21,0,34.0,MonthlyHours,Role Overload,Salary
+EMP0157,2,HR,HR Generalist,151,0,70458.21,0,26.7,Role Overload,MonthlyHours,Tenure
+EMP0158,51,Sales,Sales Manager,169,29,113014.84,0,28.1,Tenure,Salary,MonthlyHours
+EMP0159,5,HR,Recruiter,186,0,73576.93,0,47.6,Tenure,Role Overload,MonthlyHours
+EMP0160,63,Engineering,Software Engineer,184,13,53294.17,0,64.6,Tenure,Salary,LastPromotion
+EMP0161,30,Finance,Accountant,161,22,76386.84,1,24.0,LastPromotion,Tenure,Role Overload
+EMP0162,69,HR,VP of HR,175,34,187201.27,0,39.0,Tenure,Salary,Role Overload
+EMP0163,15,HR,Recruiter,184,1,53710.69,1,56.2,Role Overload,Salary,Market Competitiveness
+EMP0164,26,Sales,VP of Sales,158,20,148523.33,0,36.9,Market Competitiveness,Salary,Role Overload
+EMP0165,5,Marketing,VP of Marketing,183,3,170765.82,0,41.4,Tenure,LastPromotion,Salary
+EMP0166,6,Marketing,Marketing Manager,163,2,125170.14,0,39.4,Salary,LastPromotion,Role Overload
+EMP0167,14,Engineering,Engineering Manager,178,11,119722.07,0,33.7,LastPromotion,Salary,Market Competitiveness
+EMP0168,68,Marketing,VP of Marketing,187,34,165743.15,0,46.7,Tenure,LastPromotion,Salary
+EMP0169,20,HR,HR Manager,168,14,118285.93,0,39.8,MonthlyHours,Salary,LastPromotion
+EMP0170,135,Operations,Operations Specialist,159,59,68090.52,0,54.7,Tenure,MonthlyHours,LastPromotion
+EMP0171,24,Marketing,Growth Hacker,153,5,60987.02,1,38.9,MonthlyHours,Salary,Role Overload
+EMP0172,42,Engineering,Software Engineer,150,9,76048.93,0,35.9,Tenure,Salary,Market Competitiveness
+EMP0173,37,Finance,Financial Analyst,164,23,74708.86,0,41.7,Market Competitiveness,Salary,Role Overload
+EMP0174,4,Sales,VP of Sales,168,3,147375.73,0,41.8,MonthlyHours,Tenure,Salary
+EMP0175,16,HR,VP of HR,184,11,164838.9,0,51.6,Tenure,LastPromotion,MonthlyHours
+EMP0176,13,Marketing,Marketing Specialist,183,1,68685.81,0,53.1,Role Overload,MonthlyHours,Tenure
+EMP0177,24,Engineering,Senior Engineer,169,3,88784.66,1,46.9,LastPromotion,Salary,MonthlyHours
+EMP0178,5,Marketing,Growth Hacker,182,0,60420.68,0,52.9,Market Competitiveness,Salary,Role Overload
+EMP0179,95,Marketing,Growth Hacker,173,48,68082.7,0,75.4,Tenure,MonthlyHours,Role Overload
+EMP0180,51,Operations,Operations Specialist,192,39,65618.77,0,73.6,Tenure,Role Overload,Salary
+EMP0181,7,Sales,Sales Representative,179,2,77023.63,0,33.5,Market Competitiveness,Tenure,MonthlyHours
+EMP0182,26,Sales,Sales Representative,182,6,66160.84,1,22.4,MonthlyHours,LastPromotion,Tenure
+EMP0183,173,Sales,Sales Manager,170,41,121302.41,0,46.5,LastPromotion,Tenure,Salary
+EMP0184,30,Sales,Sales Representative,152,18,73575.17,0,28.9,LastPromotion,Tenure,Market Competitiveness
+EMP0185,55,Marketing,VP of Marketing,167,37,168883.53,0,51.4,Tenure,MonthlyHours,LastPromotion
+EMP0186,18,Marketing,Marketing Specialist,188,13,70255.33,0,37.4,Tenure,MonthlyHours,Market Competitiveness
+EMP0187,59,Operations,Operations Manager,185,48,120459.63,0,49.5,Tenure,MonthlyHours,Market Competitiveness
+EMP0188,63,Sales,Sales Manager,139,29,108127.71,0,43.7,Tenure,Market Competitiveness,MonthlyHours
+EMP0189,231,Finance,Finance Manager,176,16,120502.13,0,45.8,Salary,Tenure,Role Overload
+EMP0190,8,Operations,Operations Specialist,152,4,69607.05,0,28.3,LastPromotion,MonthlyHours,Tenure
+EMP0191,102,Sales,Sales Manager,167,50,110076.57,0,39.1,Tenure,MonthlyHours,Salary
+EMP0192,6,Sales,VP of Sales,177,1,203657.31,0,36.2,Role Overload,MonthlyHours,Market Competitiveness
+EMP0193,19,Marketing,VP of Marketing,173,11,143121.64,0,48.1,Tenure,Market Competitiveness,Role Overload
+EMP0194,22,HR,HR Manager,166,19,119787.98,0,39.9,Market Competitiveness,MonthlyHours,Tenure
+EMP0195,10,HR,HR Manager,179,7,117406.73,1,56.9,MonthlyHours,Tenure,Role Overload
+EMP0196,141,Sales,Account Executive,180,36,65829.25,0,33.0,Tenure,MonthlyHours,Market Competitiveness
+EMP0197,6,Engineering,Software Engineer,162,5,65714.24,0,31.9,MonthlyHours,Tenure,LastPromotion
+EMP0198,45,Engineering,Staff Engineer,161,5,128876.75,0,40.9,MonthlyHours,LastPromotion,Tenure
+EMP0199,72,Operations,Operations Manager,198,11,97490.92,0,57.4,Tenure,Market Competitiveness,Role Overload
+EMP0200,25,Finance,Finance Manager,186,3,125270.06,0,36.4,MonthlyHours,Tenure,Salary
+EMP0201,30,Sales,Sales Representative,179,1,51825.73,0,70.9,Role Overload,Salary,MonthlyHours
+EMP0202,63,Marketing,Marketing Manager,193,50,102824.37,0,69.3,Tenure,MonthlyHours,Role Overload
+EMP0203,8,Engineering,Staff Engineer,174,3,122835.96,0,49.6,Tenure,Salary,LastPromotion
+EMP0204,26,Finance,VP of Finance,167,7,202579.28,0,40.9,Tenure,Market Competitiveness,Salary
+EMP0205,70,HR,HR Generalist,179,54,77079.55,0,49.6,MonthlyHours,LastPromotion,Tenure
+EMP0206,77,Marketing,VP of Marketing,156,26,188080.27,0,37.4,Tenure,MonthlyHours,Salary
+EMP0207,48,HR,HR Generalist,179,37,65142.23,0,37.0,Market Competitiveness,Role Overload,Salary
+EMP0208,14,Marketing,VP of Marketing,185,11,163464.56,0,34.3,Tenure,MonthlyHours,Salary
+EMP0209,20,Engineering,Software Engineer,177,17,70967.14,0,44.2,LastPromotion,Salary,MonthlyHours
+EMP0210,2,Finance,Finance Manager,166,0,122453.09,0,43.0,MonthlyHours,Salary,Role Overload
+EMP0211,73,Finance,VP of Finance,165,20,142323.25,0,27.9,Role Overload,MonthlyHours,Tenure
+EMP0212,3,Engineering,Staff Engineer,178,1,121829.29,0,47.5,Tenure,Market Competitiveness,Role Overload
+EMP0213,18,HR,VP of HR,170,13,173534.9,0,29.9,Tenure,LastPromotion,MonthlyHours
+EMP0214,130,Engineering,Staff Engineer,182,27,95720.26,1,48.8,Tenure,Market Competitiveness,Role Overload
+EMP0215,75,Marketing,Marketing Manager,179,35,98861.38,0,33.5,Tenure,Role Overload,Salary
+EMP0216,10,Sales,Sales Manager,183,3,130089.58,1,55.3,Salary,Market Competitiveness,MonthlyHours
+EMP0217,57,Sales,Account Executive,175,45,73959.49,0,50.3,Tenure,Salary,MonthlyHours
+EMP0218,4,Engineering,Software Engineer,177,0,51811.23,1,61.4,MonthlyHours,Salary,Market Competitiveness
+EMP0219,81,Engineering,Staff Engineer,205,50,112809.84,0,63.9,Tenure,Salary,Role Overload
+EMP0220,18,Marketing,VP of Marketing,206,1,159009.81,0,58.2,Role Overload,Salary,MonthlyHours
+EMP0221,11,HR,HR Generalist,167,9,75406.64,0,17.9,Market Competitiveness,MonthlyHours,LastPromotion
+EMP0222,8,Engineering,Staff Engineer,151,7,118634.7,0,47.6,Role Overload,LastPromotion,MonthlyHours
+EMP0223,15,Marketing,Marketing Specialist,178,13,61110.31,0,68.4,Salary,MonthlyHours,Role Overload
+EMP0224,5,Engineering,Software Engineer,175,0,50830.71,0,33.4,Salary,LastPromotion,Tenure
+EMP0225,19,HR,Recruiter,146,7,68786.4,0,24.2,MonthlyHours,LastPromotion,Salary
+EMP0226,47,Marketing,Growth Hacker,186,46,74404.74,0,45.4,Market Competitiveness,Role Overload,Salary
+EMP0227,20,Finance,Finance Manager,172,18,109190.85,1,40.8,MonthlyHours,Market Competitiveness,LastPromotion
+EMP0228,1,Finance,Accountant,184,0,67152.06,1,42.3,Role Overload,Market Competitiveness,Salary
+EMP0229,28,HR,HR Manager,148,0,98375.7,0,33.5,LastPromotion,MonthlyHours,Tenure
+EMP0230,62,Engineering,Staff Engineer,171,42,112197.24,0,48.5,Tenure,MonthlyHours,LastPromotion
+EMP0231,58,Marketing,VP of Marketing,178,14,193154.57,0,42.6,LastPromotion,Role Overload,Tenure
+EMP0232,42,Marketing,VP of Marketing,157,36,185201.84,0,35.9,Salary,Role Overload,LastPromotion
+EMP0233,37,Operations,Operations Manager,165,10,107448.7,0,37.9,MonthlyHours,Tenure,Market Competitiveness
+EMP0234,6,Marketing,Marketing Specialist,166,2,64893.56,0,54.9,Role Overload,Salary,LastPromotion
+EMP0235,19,Finance,Financial Analyst,161,9,75202.33,0,35.6,Market Competitiveness,Role Overload,MonthlyHours
+EMP0236,190,HR,VP of HR,161,58,207279.48,0,55.9,Tenure,MonthlyHours,Market Competitiveness
+EMP0237,29,Engineering,Software Engineer,183,18,59973.2,0,60.0,LastPromotion,Salary,Tenure
+EMP0238,12,HR,HR Manager,174,2,101609.68,0,44.9,LastPromotion,Salary,Market Competitiveness
+EMP0239,19,Finance,VP of Finance,190,18,154091.85,0,59.6,MonthlyHours,Salary,Market Competitiveness
+EMP0240,6,HR,HR Manager,198,5,116335.47,1,75.6,Salary,LastPromotion,Tenure
+EMP0241,76,Marketing,Marketing Specialist,179,43,71129.39,0,54.7,Role Overload,Tenure,MonthlyHours
+EMP0242,21,HR,VP of HR,185,18,180409.53,1,41.9,LastPromotion,Tenure,Role Overload
+EMP0243,113,Marketing,Marketing Manager,171,51,95126.71,0,53.5,Tenure,Market Competitiveness,Salary
+EMP0244,26,Finance,Accountant,183,15,71352.7,1,41.9,Tenure,LastPromotion,Salary
+EMP0245,38,Operations,Operations Manager,166,34,103428.2,1,50.1,Role Overload,Tenure,LastPromotion
+EMP0246,2,HR,HR Manager,192,0,100714.01,0,45.6,Salary,MonthlyHours,Tenure
+EMP0247,44,Engineering,Engineering Manager,170,33,98105.97,0,31.3,Tenure,Salary,LastPromotion
+EMP0248,107,Marketing,Marketing Specialist,145,39,53162.09,1,72.1,Tenure,Salary,Role Overload
+EMP0249,13,Sales,VP of Sales,162,7,160476.06,0,30.6,Salary,LastPromotion,Tenure
+EMP0250,37,Engineering,Software Engineer,174,18,68138.89,0,42.8,Market Competitiveness,MonthlyHours,LastPromotion
+EMP0251,27,Marketing,VP of Marketing,150,20,196277.1,0,37.8,Tenure,Salary,Market Competitiveness
+EMP0252,7,Operations,Director of Operations,159,0,162231.08,0,49.4,Tenure,MonthlyHours,LastPromotion
+EMP0253,82,HR,HR Generalist,159,5,56911.07,0,79.4,Salary,Market Competitiveness,Tenure
+EMP0254,30,Finance,Finance Manager,177,17,130674.89,0,50.6,Salary,Role Overload,Market Competitiveness
+EMP0255,25,Operations,Director of Operations,197,23,187309.34,0,46.7,Salary,LastPromotion,Tenure
+EMP0256,52,Engineering,Engineering Manager,175,29,105758.72,0,42.0,Tenure,Role Overload,Salary
+EMP0257,114,Sales,Account Executive,131,46,53107.37,0,70.2,Tenure,Salary,Market Competitiveness
+EMP0258,29,Sales,Account Executive,198,8,68405.9,0,53.8,Salary,MonthlyHours,Role Overload
+EMP0259,13,Sales,Sales Representative,179,1,70638.7,1,31.0,Tenure,MonthlyHours,Salary
+EMP0260,4,Engineering,Engineering Manager,175,0,99460.49,0,36.9,MonthlyHours,Tenure,Market Competitiveness
+EMP0261,15,Sales,Account Executive,170,14,59246.8,1,28.6,Market Competitiveness,Salary,Tenure
+EMP0262,41,Operations,Operations Manager,189,16,115851.84,1,32.8,LastPromotion,Tenure,Market Competitiveness
+EMP0263,5,HR,Recruiter,188,1,56251.37,0,47.6,Salary,Role Overload,Market Competitiveness
+EMP0264,41,Marketing,Marketing Manager,192,22,126215.04,0,61.8,Salary,Tenure,Role Overload
+EMP0265,11,Engineering,Software Engineer,199,6,68805.98,0,58.9,MonthlyHours,Market Competitiveness,Salary
+EMP0266,17,Marketing,Growth Hacker,164,9,75090.1,1,34.0,Salary,Tenure,LastPromotion
+EMP0267,37,Sales,VP of Sales,197,0,164163.45,1,49.8,Salary,Role Overload,MonthlyHours
+EMP0268,3,Engineering,Senior Engineer,161,1,92469.27,0,60.9,MonthlyHours,LastPromotion,Tenure
+EMP0269,12,Sales,Account Executive,171,9,55048.62,0,68.7,Salary,Market Competitiveness,Tenure
+EMP0270,6,Marketing,Marketing Specialist,174,3,68455.19,0,41.8,Tenure,Salary,Role Overload
+EMP0271,9,HR,Recruiter,186,6,52046.28,0,54.2,Market Competitiveness,Salary,MonthlyHours
+EMP0272,104,Finance,Accountant,174,1,77077.48,0,45.7,Role Overload,Tenure,Market Competitiveness
+EMP0273,55,Finance,Finance Manager,178,36,95361.54,0,50.5,Role Overload,Tenure,Market Competitiveness
+EMP0274,27,Operations,Operations Manager,164,26,96166.79,0,47.6,MonthlyHours,LastPromotion,Tenure
+EMP0275,180,Finance,Financial Analyst,153,52,50913.3,0,54.0,Market Competitiveness,Salary,Tenure
+EMP0276,18,Sales,VP of Sales,146,0,156827.92,0,56.1,Tenure,Salary,MonthlyHours
+EMP0277,51,Finance,Finance Manager,180,40,133018.37,0,46.4,Tenure,Salary,Role Overload
+EMP0278,12,Operations,Director of Operations,185,6,199209.47,0,37.1,Tenure,Role Overload,Salary
+EMP0279,33,Operations,Operations Specialist,165,27,67809.19,0,29.7,Market Competitiveness,Role Overload,LastPromotion
+EMP0280,2,Finance,VP of Finance,187,1,185825.55,0,47.4,LastPromotion,Salary,Role Overload
+EMP0281,97,Marketing,Marketing Manager,188,40,95000.47,0,32.9,Tenure,MonthlyHours,Salary
+EMP0282,14,HR,Recruiter,184,8,73755.91,0,28.5,Market Competitiveness,LastPromotion,MonthlyHours
+EMP0283,17,HR,Recruiter,195,16,60659.31,0,57.8,Tenure,Salary,MonthlyHours
+EMP0284,12,HR,Recruiter,169,0,66843.51,0,63.0,Role Overload,Salary,LastPromotion
+EMP0285,45,Engineering,Software Engineer,155,14,70001.15,0,38.2,LastPromotion,Role Overload,Market Competitiveness
+EMP0286,2,Engineering,Software Engineer,183,0,73983.04,0,28.9,Salary,Market Competitiveness,Tenure
+EMP0287,7,Finance,Financial Analyst,184,1,50449.73,0,63.5,LastPromotion,Salary,Role Overload
+EMP0288,10,Sales,Sales Manager,187,8,116371.62,0,45.8,LastPromotion,Salary,MonthlyHours
+EMP0289,8,HR,VP of HR,177,3,155870.92,1,53.9,Market Competitiveness,Salary,Role Overload
+EMP0290,26,HR,HR Manager,170,22,117869.84,0,35.3,LastPromotion,Role Overload,Tenure
+EMP0291,18,Marketing,Growth Hacker,168,5,59353.4,0,42.2,LastPromotion,Salary,MonthlyHours
+EMP0292,21,HR,HR Generalist,157,1,55751.24,0,67.4,MonthlyHours,Market Competitiveness,Salary
+EMP0293,20,HR,HR Manager,167,17,132650.9,1,42.6,MonthlyHours,LastPromotion,Tenure
+EMP0294,5,HR,HR Generalist,196,1,66301.13,0,53.9,Salary,Market Competitiveness,Role Overload
+EMP0295,24,Operations,Operations Manager,160,9,122591.15,0,30.0,Tenure,LastPromotion,Salary
+EMP0296,4,Finance,Accountant,199,2,65494.61,0,73.4,LastPromotion,Tenure,Role Overload
+EMP0297,45,Operations,Operations Specialist,150,35,56986.68,0,64.3,Market Competitiveness,Role Overload,Salary
+EMP0298,105,Operations,Operations Specialist,182,58,71624.43,0,58.4,Tenure,MonthlyHours,LastPromotion
+EMP0299,100,Sales,VP of Sales,184,9,167932.47,0,40.7,Tenure,Role Overload,LastPromotion
+EMP0300,4,HR,HR Generalist,178,3,74116.95,0,41.9,LastPromotion,Role Overload,Salary
+EMP0301,29,Marketing,Marketing Specialist,192,12,52558.96,0,85.4,MonthlyHours,Market Competitiveness,Salary
+EMP0302,88,Finance,VP of Finance,159,57,181796.7,0,36.2,MonthlyHours,Tenure,LastPromotion
+EMP0303,98,Finance,VP of Finance,152,9,175952.77,0,42.1,Role Overload,Tenure,LastPromotion
+EMP0304,32,Engineering,Software Engineer,148,27,75627.2,1,42.8,Role Overload,LastPromotion,Market Competitiveness
+EMP0305,37,Operations,Director of Operations,173,36,194879.12,0,52.7,LastPromotion,Role Overload,Tenure
+EMP0306,26,Marketing,Growth Hacker,173,3,55880.82,0,48.1,Market Competitiveness,Salary,LastPromotion
+EMP0307,7,HR,Recruiter,185,4,73141.67,0,43.4,Market Competitiveness,Salary,MonthlyHours
+EMP0308,11,Operations,Director of Operations,169,7,195250.5,0,41.6,MonthlyHours,Tenure,Market Competitiveness
+EMP0309,102,Operations,Operations Manager,189,34,108955.6,0,18.6,LastPromotion,Market Competitiveness,Tenure
+EMP0310,21,Finance,Financial Analyst,157,4,61510.62,0,58.6,Market Competitiveness,Salary,MonthlyHours
+EMP0311,28,Sales,Account Executive,163,21,52339.52,0,64.6,Tenure,Salary,Role Overload
+EMP0312,5,Operations,Director of Operations,175,3,161770.17,0,24.7,Tenure,LastPromotion,Role Overload
+EMP0313,35,Marketing,VP of Marketing,142,32,177863.35,0,54.1,LastPromotion,MonthlyHours,Market Competitiveness
+EMP0314,74,Finance,Accountant,182,12,69505.56,0,62.2,LastPromotion,Tenure,Salary
+EMP0315,53,Sales,Sales Representative,190,38,61739.61,0,77.2,Tenure,Salary,Role Overload
+EMP0316,79,Finance,Finance Manager,184,15,95399.15,0,30.6,Tenure,MonthlyHours,Salary
+EMP0317,5,Engineering,Staff Engineer,177,4,102337.69,1,21.9,LastPromotion,Salary,Tenure
+EMP0318,59,HR,Recruiter,173,31,51175.59,0,55.6,Tenure,Salary,Market Competitiveness
+EMP0319,17,Sales,Account Executive,169,9,58992.54,0,68.5,Tenure,LastPromotion,Salary
+EMP0320,47,Finance,VP of Finance,193,26,166545.86,0,69.7,Role Overload,Salary,MonthlyHours
+EMP0321,4,Operations,Operations Specialist,175,0,66343.98,0,34.2,Market Competitiveness,MonthlyHours,Tenure
+EMP0322,35,Sales,Sales Manager,163,8,108878.51,0,45.3,Market Competitiveness,Role Overload,MonthlyHours
+EMP0323,39,Finance,Accountant,176,21,71231.48,0,49.4,Tenure,LastPromotion,Salary
+EMP0324,10,Finance,Accountant,168,9,64197.67,0,40.9,Market Competitiveness,Salary,LastPromotion
+EMP0325,22,Finance,Financial Analyst,172,5,64931.04,0,60.4,Market Competitiveness,LastPromotion,Salary
+EMP0326,43,Marketing,Marketing Specialist,180,21,51767.93,0,41.3,MonthlyHours,Salary,Tenure
+EMP0327,21,Marketing,Marketing Specialist,179,13,68671.73,0,24.4,Salary,Tenure,Role Overload
+EMP0328,4,Sales,Account Executive,185,0,51883.17,0,60.9,Salary,Role Overload,Tenure
+EMP0329,41,Finance,VP of Finance,173,30,142824.56,0,38.1,Salary,Market Competitiveness,Role Overload
+EMP0330,19,Sales,Sales Manager,158,14,115465.43,0,51.1,Market Competitiveness,Salary,LastPromotion
+EMP0331,3,Finance,Accountant,194,1,69807.12,0,68.0,Tenure,Salary,Market Competitiveness
+EMP0332,35,Operations,Director of Operations,166,20,208678.25,0,62.2,MonthlyHours,Market Competitiveness,Role Overload
+EMP0333,108,HR,HR Manager,167,53,109924.9,1,65.6,Tenure,Market Competitiveness,MonthlyHours
+EMP0334,132,Finance,Finance Manager,175,0,120437.61,0,32.5,Role Overload,Market Competitiveness,Tenure
+EMP0335,3,HR,HR Generalist,171,1,69199.62,1,27.3,Market Competitiveness,MonthlyHours,Tenure
+EMP0336,65,Operations,Operations Specialist,164,10,66599.53,0,42.2,MonthlyHours,Salary,Tenure
+EMP0337,90,Operations,Operations Manager,153,45,121361.82,0,61.4,Salary,Tenure,LastPromotion
+EMP0338,9,Engineering,Staff Engineer,184,6,119759.66,1,29.8,Salary,Tenure,MonthlyHours
+EMP0339,40,Marketing,Marketing Specialist,169,10,72103.46,0,46.6,Tenure,LastPromotion,Role Overload
+EMP0340,6,Operations,Director of Operations,173,2,162837.77,0,44.8,Tenure,Role Overload,MonthlyHours
+EMP0341,41,Engineering,Engineering Manager,168,37,129586.36,0,43.3,Role Overload,Tenure,LastPromotion
+EMP0342,59,Marketing,Growth Hacker,177,39,58501.47,0,59.4,Role Overload,Salary,MonthlyHours
+EMP0343,150,Engineering,Staff Engineer,197,52,111744.29,0,67.5,Tenure,Market Competitiveness,Salary
+EMP0344,40,Marketing,VP of Marketing,176,31,202266.35,0,29.6,Market Competitiveness,LastPromotion,Tenure
+EMP0345,30,Engineering,Staff Engineer,190,24,129391.79,0,52.9,Market Competitiveness,Role Overload,Salary
+EMP0346,109,Sales,Sales Representative,177,56,64361.12,1,57.4,Tenure,Salary,MonthlyHours
+EMP0347,40,Engineering,Software Engineer,177,27,54628.46,1,44.0,Tenure,Salary,LastPromotion
+EMP0348,95,HR,VP of HR,175,56,194995.02,0,59.5,Tenure,Market Competitiveness,Role Overload
+EMP0349,68,Engineering,Staff Engineer,166,24,96009.49,0,44.8,Market Competitiveness,Tenure,MonthlyHours
+EMP0350,1,HR,VP of HR,178,0,183913.03,0,43.8,Salary,MonthlyHours,Role Overload
+EMP0351,13,Sales,Sales Representative,176,10,56668.11,1,60.7,Salary,MonthlyHours,Market Competitiveness
+EMP0352,21,Operations,Operations Manager,166,17,101828.33,0,53.9,Market Competitiveness,Salary,MonthlyHours
+EMP0353,26,Engineering,Engineering Manager,164,19,106138.83,1,40.0,Salary,Role Overload,MonthlyHours
+EMP0354,15,Operations,Operations Specialist,196,8,67032.95,0,58.1,Role Overload,Salary,MonthlyHours
+EMP0355,3,Operations,Operations Manager,202,0,104477.33,0,68.6,LastPromotion,MonthlyHours,Tenure
+EMP0356,4,Finance,Financial Analyst,164,3,50842.91,1,38.6,Role Overload,Salary,Tenure
+EMP0357,14,Finance,VP of Finance,178,9,203905.17,0,45.3,Market Competitiveness,MonthlyHours,Tenure
+EMP0358,21,Marketing,Marketing Manager,164,13,98157.58,0,48.8,LastPromotion,MonthlyHours,Market Competitiveness
+EMP0359,101,Marketing,VP of Marketing,153,26,146465.24,0,37.8,Tenure,Salary,MonthlyHours
+EMP0360,1,Finance,Financial Analyst,154,0,54961.39,0,63.5,Role Overload,Salary,Tenure
+EMP0361,73,Finance,VP of Finance,186,22,201921.08,1,30.3,Tenure,Market Competitiveness,Role Overload
+EMP0362,16,HR,HR Manager,192,5,101933.72,0,57.4,Tenure,Market Competitiveness,Salary
+EMP0363,48,HR,VP of HR,191,4,164859.22,0,78.2,Role Overload,Tenure,Salary
+EMP0364,31,Marketing,Marketing Manager,184,17,117423.19,1,42.9,Market Competitiveness,Salary,Tenure
+EMP0365,23,Sales,Sales Representative,196,18,68444.09,0,66.0,Market Competitiveness,Role Overload,MonthlyHours
+EMP0366,62,Sales,Sales Representative,173,46,54040.66,0,74.5,Tenure,Salary,MonthlyHours
+EMP0367,31,Sales,Sales Manager,180,9,127942.09,0,32.0,Role Overload,LastPromotion,Salary
+EMP0368,30,Engineering,Software Engineer,178,15,63499.7,1,52.1,LastPromotion,Tenure,Salary
+EMP0369,23,Finance,Accountant,180,5,69017.58,0,38.1,LastPromotion,Market Competitiveness,MonthlyHours
+EMP0370,7,Operations,Operations Manager,176,0,132124.07,1,40.5,Salary,Tenure,Market Competitiveness
+EMP0371,3,Marketing,Marketing Manager,184,1,128345.76,0,19.5,Salary,LastPromotion,MonthlyHours
+EMP0372,22,Operations,Operations Specialist,177,13,57786.79,0,71.4,Tenure,Salary,MonthlyHours
+EMP0373,2,Marketing,VP of Marketing,156,0,189708.03,0,37.1,LastPromotion,Salary,Role Overload
+EMP0374,18,Marketing,Marketing Manager,156,9,107593.03,0,30.2,LastPromotion,Tenure,Salary
+EMP0375,39,HR,Recruiter,168,28,75621.7,0,37.3,Role Overload,MonthlyHours,Tenure
+EMP0376,15,Operations,Operations Manager,172,8,103435.45,1,44.2,Role Overload,LastPromotion,Tenure
+EMP0377,35,HR,VP of HR,196,8,182247.02,0,57.6,Role Overload,LastPromotion,MonthlyHours
+EMP0378,3,Engineering,Staff Engineer,171,2,111687.74,0,49.5,Market Competitiveness,MonthlyHours,LastPromotion
+EMP0379,18,Engineering,Senior Engineer,189,1,82304.22,0,56.6,LastPromotion,MonthlyHours,Tenure
+EMP0380,12,Engineering,Engineering Manager,171,2,96146.1,0,39.7,Salary,Role Overload,MonthlyHours
+EMP0381,31,Operations,Operations Specialist,210,7,75318.81,0,73.0,MonthlyHours,Salary,Tenure
+EMP0382,10,Finance,Accountant,157,7,76051.16,0,31.4,Market Competitiveness,Salary,Tenure
+EMP0383,40,HR,HR Generalist,179,28,59363.23,0,60.2,Role Overload,Salary,Tenure
+EMP0384,13,Sales,VP of Sales,175,8,158772.21,0,48.7,LastPromotion,MonthlyHours,Role Overload
+EMP0385,15,HR,Recruiter,164,5,57275.19,1,62.4,Salary,Role Overload,MonthlyHours
+EMP0386,10,Finance,Financial Analyst,188,8,65276.3,0,45.2,Market Competitiveness,Tenure,Salary
+EMP0387,41,Sales,Account Executive,168,8,54373.64,1,52.9,Tenure,Salary,Market Competitiveness
+EMP0388,26,Finance,Accountant,168,9,61969.62,0,70.0,Market Competitiveness,Salary,LastPromotion
+EMP0389,30,Engineering,Staff Engineer,159,9,126658.54,0,33.2,Role Overload,Tenure,Salary
+EMP0390,120,Operations,Director of Operations,184,32,183773.11,0,39.4,MonthlyHours,LastPromotion,Tenure
+EMP0391,44,Engineering,Engineering Manager,179,11,108278.86,0,27.7,MonthlyHours,Role Overload,Market Competitiveness
+EMP0392,36,Marketing,Marketing Manager,195,23,114703.96,0,37.9,LastPromotion,Role Overload,MonthlyHours
+EMP0393,7,Sales,VP of Sales,173,5,146291.38,0,38.0,Tenure,MonthlyHours,Role Overload
+EMP0394,69,HR,VP of HR,150,44,187574.32,1,63.7,Salary,Tenure,LastPromotion
+EMP0395,37,Marketing,Marketing Specialist,170,5,69169.53,1,40.5,Tenure,LastPromotion,Salary
+EMP0396,65,Marketing,Marketing Specialist,177,44,75039.42,0,61.5,Tenure,Role Overload,LastPromotion
+EMP0397,30,Finance,Accountant,193,21,68655.5,1,62.3,Salary,Role Overload,Market Competitiveness
+EMP0398,4,Marketing,VP of Marketing,195,1,144606.82,1,35.1,LastPromotion,Role Overload,Salary
+EMP0399,25,Engineering,Software Engineer,178,15,53729.88,0,65.6,LastPromotion,Salary,Tenure
+EMP0400,75,Engineering,Staff Engineer,200,44,126213.91,0,75.0,Tenure,Market Competitiveness,MonthlyHours
+EMP0401,10,Sales,Account Executive,178,9,53025.25,0,40.0,Market Competitiveness,Salary,Tenure
+EMP0402,5,Finance,VP of Finance,191,2,184644.19,0,82.8,Tenure,Role Overload,LastPromotion
+EMP0403,33,HR,HR Generalist,159,7,66327.65,0,44.3,Market Competitiveness,Salary,Tenure
+EMP0404,30,Operations,Operations Manager,184,13,124295.54,1,37.6,LastPromotion,MonthlyHours,Salary
+EMP0405,41,Engineering,Engineering Manager,195,10,109800.98,0,54.2,Market Competitiveness,Tenure,MonthlyHours
+EMP0406,61,Engineering,Senior Engineer,161,13,84857.69,0,39.4,Tenure,Role Overload,Salary
+EMP0407,75,Marketing,Marketing Specialist,178,37,60843.68,0,69.7,Tenure,Salary,Role Overload
+EMP0408,48,Engineering,Senior Engineer,169,9,94322.49,0,36.4,Tenure,LastPromotion,MonthlyHours
+EMP0409,7,Engineering,Software Engineer,170,3,55847.27,0,55.8,Role Overload,Salary,LastPromotion
+EMP0410,59,Sales,VP of Sales,161,26,181493.97,0,40.8,Tenure,Role Overload,MonthlyHours
+EMP0411,17,Finance,Finance Manager,181,13,125205.34,0,63.6,Tenure,Role Overload,Market Competitiveness
+EMP0412,12,Operations,Operations Manager,182,7,127067.37,0,31.9,MonthlyHours,LastPromotion,Tenure
+EMP0413,60,Engineering,Senior Engineer,165,52,93195.67,0,63.4,MonthlyHours,Tenure,Market Competitiveness
+EMP0414,18,Finance,Financial Analyst,169,10,73137.54,0,25.5,LastPromotion,MonthlyHours,Role Overload
+EMP0415,36,Marketing,Marketing Manager,180,15,129651.7,0,53.5,Salary,Market Competitiveness,Tenure
+EMP0416,62,Operations,Operations Specialist,181,52,64655.24,0,75.6,Market Competitiveness,Salary,LastPromotion
+EMP0417,9,Finance,Financial Analyst,165,5,64327.81,0,53.6,Market Competitiveness,Salary,Role Overload
+EMP0418,30,Finance,Accountant,177,8,65620.46,1,40.1,LastPromotion,MonthlyHours,Role Overload
+EMP0419,22,Engineering,Software Engineer,187,7,58305.15,0,37.7,Market Competitiveness,MonthlyHours,Salary
+EMP0420,7,HR,Recruiter,176,4,76571.46,0,36.3,Market Competitiveness,Tenure,LastPromotion
+EMP0421,40,Marketing,Marketing Manager,157,8,111617.72,0,57.7,MonthlyHours,Role Overload,Market Competitiveness
+EMP0422,33,Finance,Financial Analyst,160,29,63731.44,0,66.3,Tenure,Salary,Role Overload
+EMP0423,5,Operations,Director of Operations,190,4,159642.06,0,33.3,Salary,Tenure,LastPromotion
+EMP0424,118,Operations,Operations Manager,172,0,111386.91,1,57.6,Tenure,LastPromotion,Role Overload
+EMP0425,32,Marketing,VP of Marketing,180,28,152685.79,1,44.8,Tenure,Role Overload,LastPromotion
+EMP0426,35,HR,Recruiter,163,27,68912.77,0,41.0,Tenure,Salary,Role Overload
+EMP0427,86,Sales,Account Executive,194,42,69620.31,0,63.3,LastPromotion,Tenure,Market Competitiveness
+EMP0428,23,Engineering,Software Engineer,205,17,51936.3,0,90.9,Tenure,Salary,Role Overload
+EMP0429,11,Marketing,Marketing Manager,183,4,124401.01,0,57.8,LastPromotion,Salary,Market Competitiveness
+EMP0430,33,Sales,VP of Sales,146,5,203561.06,0,41.2,Tenure,LastPromotion,Salary
+EMP0431,31,Finance,Finance Manager,160,23,115855.08,1,53.8,MonthlyHours,Salary,Market Competitiveness
+EMP0432,32,HR,HR Manager,189,22,112186.93,0,25.2,Market Competitiveness,LastPromotion,Salary
+EMP0433,8,Engineering,Senior Engineer,166,0,96654.01,0,52.7,Market Competitiveness,Role Overload,MonthlyHours
+EMP0434,27,Operations,Operations Manager,163,19,109415.02,0,30.8,MonthlyHours,Salary,Market Competitiveness
+EMP0435,1,Marketing,Marketing Specialist,208,0,68564.76,0,45.2,MonthlyHours,Market Competitiveness,Tenure
+EMP0436,6,Sales,Sales Manager,152,0,100505.19,0,50.8,MonthlyHours,LastPromotion,Tenure
+EMP0437,16,Sales,VP of Sales,204,11,154678.32,1,61.4,MonthlyHours,Tenure,LastPromotion
+EMP0438,6,Sales,Sales Manager,167,0,102298.32,1,31.0,Tenure,Role Overload,MonthlyHours
+EMP0439,6,Finance,Financial Analyst,164,4,56502.29,0,44.8,Salary,Role Overload,Market Competitiveness
+EMP0440,53,Marketing,Marketing Manager,180,35,110067.06,0,30.9,Tenure,Role Overload,Salary
+EMP0441,76,Marketing,Marketing Manager,185,26,126403.35,0,35.7,LastPromotion,Tenure,Role Overload
+EMP0442,2,HR,Recruiter,156,0,53358.68,0,62.2,Role Overload,Salary,Tenure
+EMP0443,4,Finance,Financial Analyst,157,2,72734.49,1,47.6,Salary,LastPromotion,Tenure
+EMP0444,49,Engineering,Software Engineer,156,2,54728.04,0,63.2,Tenure,Role Overload,Salary
+EMP0445,7,Marketing,Marketing Manager,176,1,111071.73,0,52.3,LastPromotion,Salary,Role Overload
+EMP0446,98,Finance,VP of Finance,162,47,188791.69,0,31.0,Tenure,Salary,MonthlyHours
+EMP0447,79,Operations,Operations Manager,189,7,122807.5,0,54.5,Tenure,LastPromotion,Market Competitiveness
+EMP0448,29,HR,VP of HR,173,11,176929.46,0,42.2,Tenure,Market Competitiveness,LastPromotion
+EMP0449,6,Sales,Sales Representative,177,5,61624.08,0,49.4,LastPromotion,Market Competitiveness,Salary
+EMP0450,23,Engineering,Staff Engineer,186,20,121431.94,0,31.7,MonthlyHours,Salary,LastPromotion
+EMP0451,31,Finance,Accountant,190,1,50006.36,1,54.3,LastPromotion,Salary,Tenure
+EMP0452,76,Finance,Financial Analyst,160,0,53335.94,0,62.7,Tenure,Salary,LastPromotion
+EMP0453,10,Engineering,Engineering Manager,178,1,97153.22,0,41.7,Market Competitiveness,MonthlyHours,Salary
+EMP0454,22,Sales,Sales Representative,175,14,71649.14,0,60.4,Tenure,MonthlyHours,LastPromotion
+EMP0455,24,Finance,Finance Manager,177,13,110945.7,1,23.7,MonthlyHours,Tenure,LastPromotion
+EMP0456,19,Finance,Finance Manager,183,5,134675.57,1,34.5,LastPromotion,Market Competitiveness,Role Overload
+EMP0457,17,Marketing,Marketing Manager,179,8,116481.65,0,39.5,LastPromotion,Tenure,Role Overload
+EMP0458,41,HR,HR Generalist,159,33,75464.03,0,49.9,MonthlyHours,Market Competitiveness,Salary
+EMP0459,24,Engineering,Staff Engineer,164,21,95529.15,0,44.2,Role Overload,Market Competitiveness,MonthlyHours
+EMP0460,79,Engineering,Staff Engineer,164,14,130136.63,1,31.1,Tenure,Role Overload,LastPromotion
+EMP0461,26,Sales,Sales Representative,183,19,68574.15,0,48.1,Role Overload,Tenure,LastPromotion
+EMP0462,109,Engineering,Staff Engineer,163,26,109093.08,0,31.8,Tenure,Market Competitiveness,LastPromotion
+EMP0463,64,Operations,Director of Operations,209,15,194266.42,0,61.6,LastPromotion,Market Competitiveness,Tenure
+EMP0464,50,Engineering,Staff Engineer,182,42,97761.48,0,63.9,MonthlyHours,Tenure,Salary
+EMP0465,63,Operations,Director of Operations,181,59,149258.81,0,73.7,Role Overload,Market Competitiveness,Tenure
+EMP0466,45,HR,HR Manager,172,1,110128.98,0,26.1,Market Competitiveness,LastPromotion,Salary
+EMP0467,70,Operations,Operations Specialist,161,52,60830.6,0,83.5,Tenure,Salary,LastPromotion
+EMP0468,11,Operations,Operations Specialist,165,0,54527.45,1,65.7,Role Overload,Salary,LastPromotion
+EMP0469,4,Sales,VP of Sales,179,3,204154.24,0,46.1,LastPromotion,Salary,MonthlyHours
+EMP0470,49,Operations,Director of Operations,188,8,161983.07,0,42.4,Tenure,Salary,Market Competitiveness
+EMP0471,20,Marketing,Growth Hacker,178,17,73222.78,0,39.0,LastPromotion,Role Overload,Market Competitiveness
+EMP0472,61,Engineering,Engineering Manager,162,54,128317.5,1,35.9,Tenure,Market Competitiveness,MonthlyHours
+EMP0473,59,HR,VP of HR,169,48,141401.63,0,65.9,Tenure,LastPromotion,Market Competitiveness
+EMP0474,40,Marketing,VP of Marketing,168,13,160433.78,0,37.5,Tenure,Salary,Market Competitiveness
+EMP0475,19,Marketing,Marketing Specialist,192,16,75142.75,0,64.5,MonthlyHours,Tenure,Market Competitiveness
+EMP0476,1,Marketing,VP of Marketing,185,0,198736.98,0,28.1,Role Overload,Tenure,Salary
+EMP0477,53,Marketing,VP of Marketing,174,33,205570.72,0,43.9,Tenure,MonthlyHours,Market Competitiveness
+EMP0478,35,Marketing,Marketing Manager,158,31,129181.9,0,34.2,LastPromotion,Salary,Tenure
+EMP0479,8,Finance,Accountant,155,6,72092.64,0,37.5,Market Competitiveness,LastPromotion,Tenure
+EMP0480,14,Sales,VP of Sales,190,7,191712.05,0,41.9,Tenure,MonthlyHours,Role Overload
+EMP0481,2,HR,HR Generalist,164,1,72724.02,0,43.6,Market Competitiveness,MonthlyHours,Role Overload
+EMP0482,83,Sales,Account Executive,159,11,71341.94,0,42.2,Salary,Tenure,LastPromotion
+EMP0483,19,Marketing,Marketing Specialist,163,3,55531.57,0,50.8,MonthlyHours,Salary,Tenure
+EMP0484,12,HR,HR Generalist,144,6,75015.33,0,47.5,Role Overload,MonthlyHours,LastPromotion
+EMP0485,24,HR,Recruiter,182,5,65478.82,0,37.7,Market Competitiveness,Role Overload,Tenure
+EMP0486,12,HR,Recruiter,151,1,52097.08,0,28.6,Tenure,Salary,Role Overload
+EMP0487,18,Engineering,Engineering Manager,173,1,111092.28,0,43.8,LastPromotion,MonthlyHours,Salary
+EMP0488,2,Engineering,Software Engineer,206,1,68306.03,0,45.8,MonthlyHours,Market Competitiveness,Salary
+EMP0489,123,Marketing,Marketing Specialist,197,3,73749.08,0,68.0,LastPromotion,Tenure,Role Overload
+EMP0490,14,HR,VP of HR,187,4,151521.95,0,39.7,Tenure,LastPromotion,Salary
+EMP0491,27,Finance,Financial Analyst,172,21,69457.71,0,43.9,Tenure,Role Overload,MonthlyHours
+EMP0492,59,HR,VP of HR,176,10,202947.42,0,27.7,Tenure,LastPromotion,Market Competitiveness
+EMP0493,13,Marketing,VP of Marketing,158,5,173191.06,0,43.8,Market Competitiveness,LastPromotion,MonthlyHours
+EMP0494,11,Sales,VP of Sales,191,6,206646.7,0,58.1,MonthlyHours,Market Competitiveness,Tenure
+EMP0495,62,Marketing,Growth Hacker,186,53,67393.22,0,55.8,Tenure,Role Overload,MonthlyHours
+EMP0496,61,Sales,VP of Sales,171,52,163252.08,0,46.1,LastPromotion,Tenure,Market Competitiveness
+EMP0497,3,HR,HR Manager,151,1,134317.88,0,32.2,Role Overload,Market Competitiveness,Salary
+EMP0498,37,Sales,Sales Manager,180,33,125247.69,0,46.6,Market Competitiveness,LastPromotion,MonthlyHours
+EMP0499,13,Operations,Operations Specialist,195,0,61199.52,0,63.4,Tenure,Salary,Market Competitiveness
+EMP0500,40,Engineering,Senior Engineer,199,8,97558.9,0,53.2,LastPromotion,Market Competitiveness,Salary
+EMP0501,17,Engineering,Engineering Manager,200,3,132555.08,0,63.0,Role Overload,Tenure,Salary
+EMP0502,72,HR,HR Generalist,162,54,50851.64,0,69.7,Market Competitiveness,Salary,Role Overload
+EMP0503,63,Marketing,Marketing Manager,161,16,113776.27,1,23.6,Tenure,MonthlyHours,LastPromotion
+EMP0504,46,Marketing,VP of Marketing,191,9,171971.14,0,55.6,Tenure,MonthlyHours,LastPromotion
+EMP0505,45,Finance,VP of Finance,158,38,184513.75,0,40.6,MonthlyHours,Salary,LastPromotion
+EMP0506,23,Engineering,Senior Engineer,154,18,103505.05,0,59.3,LastPromotion,MonthlyHours,Role Overload
+EMP0507,24,Engineering,Engineering Manager,187,0,126407.6,0,37.4,Tenure,MonthlyHours,Salary
+EMP0508,11,Engineering,Engineering Manager,143,8,106160.33,0,36.8,LastPromotion,Market Competitiveness,Salary
+EMP0509,22,Finance,Accountant,161,12,57246.19,0,68.3,LastPromotion,Salary,MonthlyHours
+EMP0510,11,HR,HR Manager,191,1,132505.59,0,54.1,Tenure,LastPromotion,MonthlyHours
+EMP0511,1,Engineering,Software Engineer,202,0,70963.56,0,63.5,LastPromotion,Tenure,MonthlyHours
+EMP0512,19,Engineering,Staff Engineer,173,8,105866.57,0,51.8,LastPromotion,MonthlyHours,Tenure
+EMP0513,17,Marketing,Growth Hacker,164,16,75080.34,0,45.0,Salary,MonthlyHours,Market Competitiveness
+EMP0514,16,HR,HR Manager,165,0,125023.94,0,47.0,Role Overload,Tenure,Salary
+EMP0515,22,Marketing,Growth Hacker,175,17,68321.7,1,44.7,MonthlyHours,Tenure,Market Competitiveness
+EMP0516,17,HR,HR Generalist,172,8,74277.69,0,31.1,Role Overload,LastPromotion,Tenure
+EMP0517,82,Marketing,Growth Hacker,173,11,54497.74,0,59.9,Tenure,Salary,MonthlyHours
+EMP0518,50,Engineering,Software Engineer,175,1,62451.96,0,70.9,Tenure,Salary,MonthlyHours
+EMP0519,69,Engineering,Staff Engineer,172,33,97563.79,0,16.1,Tenure,Role Overload,LastPromotion
+EMP0520,67,HR,HR Generalist,151,21,68960.06,0,37.9,Tenure,MonthlyHours,Market Competitiveness
+EMP0521,76,Sales,VP of Sales,177,51,154948.0,0,50.1,Tenure,LastPromotion,Role Overload
+EMP0522,73,Sales,VP of Sales,170,3,156916.12,0,50.2,LastPromotion,Salary,Tenure
+EMP0523,50,Sales,VP of Sales,165,16,189109.57,0,33.4,Role Overload,Tenure,MonthlyHours
+EMP0524,14,Operations,Operations Manager,165,9,134356.25,1,49.0,Salary,MonthlyHours,LastPromotion
+EMP0525,89,Marketing,Marketing Specialist,181,15,65940.34,0,33.5,LastPromotion,Tenure,Market Competitiveness
+EMP0526,29,Sales,VP of Sales,167,10,171448.77,0,57.5,LastPromotion,Salary,Role Overload
+EMP0527,30,Operations,Operations Specialist,167,5,69813.38,0,21.7,Tenure,MonthlyHours,Role Overload
+EMP0528,38,Engineering,Staff Engineer,178,32,113334.54,0,52.0,MonthlyHours,LastPromotion,Market Competitiveness
+EMP0529,6,Operations,Director of Operations,188,0,147225.17,0,46.5,MonthlyHours,Tenure,Role Overload
+EMP0530,5,Engineering,Engineering Manager,187,4,124691.95,0,43.6,LastPromotion,Role Overload,MonthlyHours
+EMP0531,11,Operations,Director of Operations,182,1,207864.36,0,38.5,Market Competitiveness,Salary,Role Overload
+EMP0532,16,Sales,Account Executive,178,0,77949.6,0,38.4,Market Competitiveness,Salary,LastPromotion
+EMP0533,3,HR,HR Generalist,181,0,64398.36,0,65.7,Market Competitiveness,Salary,MonthlyHours
+EMP0534,9,Marketing,Marketing Manager,192,8,112075.79,0,63.4,MonthlyHours,Tenure,LastPromotion
+EMP0535,130,Engineering,Staff Engineer,168,45,127675.61,0,32.8,MonthlyHours,Role Overload,Tenure
+EMP0536,2,Finance,VP of Finance,189,0,208095.56,1,42.6,Market Competitiveness,Tenure,LastPromotion
+EMP0537,11,HR,HR Generalist,191,10,59854.03,0,72.3,Tenure,Salary,MonthlyHours
+EMP0538,46,Sales,VP of Sales,210,28,178253.35,0,63.3,LastPromotion,MonthlyHours,Role Overload
+EMP0539,8,Marketing,VP of Marketing,182,0,198824.37,0,38.7,Salary,MonthlyHours,Market Competitiveness
+EMP0540,190,Engineering,Staff Engineer,173,48,120026.0,0,59.9,Tenure,LastPromotion,MonthlyHours
+EMP0541,5,Marketing,Marketing Specialist,179,4,67352.94,0,32.0,MonthlyHours,Role Overload,Market Competitiveness
+EMP0542,32,Finance,Financial Analyst,193,25,68490.87,0,65.4,Tenure,Salary,MonthlyHours
+EMP0543,1,Marketing,Marketing Specialist,166,0,76710.23,0,39.3,Tenure,Role Overload,Salary
+EMP0544,89,Marketing,Marketing Specialist,167,34,77330.41,0,36.3,Tenure,Role Overload,Salary
+EMP0545,33,Engineering,Senior Engineer,161,4,92164.15,1,50.8,LastPromotion,Role Overload,Tenure
+EMP0546,65,Operations,Director of Operations,149,48,202707.1,0,52.1,Tenure,Market Competitiveness,LastPromotion
+EMP0547,22,Marketing,VP of Marketing,176,0,172834.18,0,43.8,Salary,Role Overload,MonthlyHours
+EMP0548,58,Operations,Director of Operations,156,52,178148.76,0,60.4,Tenure,MonthlyHours,Market Competitiveness
+EMP0549,28,Engineering,Senior Engineer,191,6,80530.1,0,71.4,Market Competitiveness,LastPromotion,MonthlyHours
+EMP0550,173,Engineering,Staff Engineer,181,45,113680.71,0,46.2,Tenure,Role Overload,LastPromotion
+EMP0551,10,Operations,Director of Operations,178,3,184144.47,0,43.2,Role Overload,Salary,Market Competitiveness
+EMP0552,102,Operations,Operations Manager,166,17,105719.89,1,62.9,LastPromotion,MonthlyHours,Tenure
+EMP0553,57,HR,VP of HR,156,49,150226.76,0,65.5,Tenure,LastPromotion,Salary
+EMP0554,1,Operations,Operations Manager,170,0,127787.08,1,44.3,Tenure,Salary,MonthlyHours
+EMP0555,10,Engineering,Engineering Manager,175,4,100429.83,1,38.5,MonthlyHours,Role Overload,Market Competitiveness
+EMP0556,9,Finance,Financial Analyst,164,8,59582.31,1,61.2,Salary,Role Overload,MonthlyHours
+EMP0557,62,Marketing,Marketing Manager,168,40,121317.98,0,53.3,Tenure,LastPromotion,Role Overload
+EMP0558,45,Operations,Operations Manager,162,24,125113.9,0,45.5,LastPromotion,Salary,Role Overload
+EMP0559,71,Engineering,Senior Engineer,156,48,106597.86,0,38.9,Tenure,LastPromotion,Market Competitiveness
+EMP0560,36,Operations,Operations Specialist,175,29,55922.19,0,52.7,Role Overload,Salary,MonthlyHours
+EMP0561,46,Finance,VP of Finance,155,7,188285.39,1,52.9,Tenure,LastPromotion,Role Overload
+EMP0562,50,Operations,Operations Manager,164,36,124288.77,0,44.4,MonthlyHours,Market Competitiveness,Tenure
+EMP0563,64,Marketing,Marketing Specialist,150,12,50816.76,0,49.6,Tenure,Salary,LastPromotion
+EMP0564,16,HR,HR Generalist,173,0,53658.83,0,56.8,Tenure,Salary,LastPromotion
+EMP0565,46,Operations,Director of Operations,163,28,157523.82,0,42.0,Tenure,Role Overload,LastPromotion
+EMP0566,5,HR,HR Manager,162,4,113348.2,0,37.5,LastPromotion,Role Overload,Salary
+EMP0567,45,Sales,Account Executive,182,41,77568.13,0,13.8,LastPromotion,Market Competitiveness,Salary
+EMP0568,118,Engineering,Engineering Manager,181,27,119579.98,1,39.8,Tenure,MonthlyHours,Market Competitiveness
+EMP0569,48,Finance,Financial Analyst,158,34,67787.42,0,46.7,LastPromotion,Role Overload,Market Competitiveness
+EMP0570,12,Finance,Financial Analyst,178,9,72122.33,0,39.4,Market Competitiveness,LastPromotion,Salary
+EMP0571,36,Operations,Operations Specialist,172,35,52258.75,0,55.7,Tenure,Salary,Market Competitiveness
+EMP0572,9,Marketing,Growth Hacker,180,8,76344.54,0,43.6,LastPromotion,Role Overload,Market Competitiveness
+EMP0573,1,HR,HR Generalist,184,0,68646.52,0,41.1,Salary,MonthlyHours,Market Competitiveness
+EMP0574,62,Marketing,Marketing Manager,161,56,125605.95,0,58.6,Tenure,Role Overload,LastPromotion
+EMP0575,9,Sales,Sales Representative,162,2,64514.23,0,56.9,LastPromotion,Salary,MonthlyHours
+EMP0576,139,Finance,VP of Finance,127,53,200651.57,0,56.3,Tenure,MonthlyHours,Salary
+EMP0577,70,Marketing,Marketing Specialist,170,46,62530.08,0,65.9,Tenure,Salary,MonthlyHours
+EMP0578,10,Operations,Director of Operations,154,8,193420.5,0,46.7,MonthlyHours,Role Overload,Tenure
+EMP0579,5,Finance,VP of Finance,191,0,145525.09,0,58.5,LastPromotion,Role Overload,Salary
+EMP0580,32,Sales,VP of Sales,165,17,174321.87,1,51.1,MonthlyHours,Market Competitiveness,LastPromotion
+EMP0581,10,Engineering,Staff Engineer,172,3,117297.64,1,54.5,LastPromotion,Tenure,Salary
+EMP0582,14,Sales,Account Executive,173,9,58130.13,0,53.6,Market Competitiveness,LastPromotion,Salary
+EMP0583,11,Marketing,VP of Marketing,170,3,191170.72,0,24.0,Tenure,LastPromotion,MonthlyHours
+EMP0584,15,HR,HR Manager,153,1,118337.05,0,43.0,Market Competitiveness,LastPromotion,MonthlyHours
+EMP0585,14,Operations,Director of Operations,173,9,153718.61,1,26.7,LastPromotion,Salary,Role Overload
+EMP0586,5,Marketing,Growth Hacker,173,2,77695.51,0,48.6,Role Overload,LastPromotion,Tenure
+EMP0587,271,Finance,Finance Manager,182,35,124101.46,0,46.2,Tenure,LastPromotion,Market Competitiveness
+EMP0588,3,Operations,Director of Operations,184,2,199462.51,0,38.6,Role Overload,Market Competitiveness,Tenure
+EMP0589,7,Sales,Account Executive,134,2,77820.19,0,65.5,Salary,Role Overload,Tenure
+EMP0590,8,HR,VP of HR,163,5,174543.6,1,44.2,LastPromotion,MonthlyHours,Market Competitiveness
+EMP0591,156,Engineering,Software Engineer,176,16,73420.31,0,34.8,Role Overload,Salary,Tenure
+EMP0592,33,Operations,Director of Operations,169,27,167266.12,0,37.6,Role Overload,Tenure,Salary
+EMP0593,4,Operations,Operations Specialist,174,1,52531.73,1,64.7,Tenure,Salary,Market Competitiveness
+EMP0594,42,Marketing,VP of Marketing,179,3,164549.69,0,46.8,LastPromotion,Market Competitiveness,MonthlyHours
+EMP0595,55,Operations,Operations Specialist,156,38,60268.21,0,52.7,Tenure,Salary,LastPromotion
+EMP0596,16,Operations,Operations Manager,118,4,117163.97,0,57.5,Tenure,Role Overload,MonthlyHours
+EMP0597,20,Marketing,Marketing Manager,198,6,98793.97,0,49.4,Role Overload,Market Competitiveness,MonthlyHours
+EMP0598,8,Engineering,Engineering Manager,188,6,108499.08,0,41.4,Tenure,Salary,Market Competitiveness
+EMP0599,66,Sales,Sales Manager,168,29,115787.4,0,37.2,Tenure,Role Overload,Market Competitiveness
+EMP0600,4,HR,HR Generalist,188,1,68784.22,0,26.0,Market Competitiveness,MonthlyHours,LastPromotion
+EMP0601,17,Sales,Account Executive,168,7,72508.08,0,44.3,Role Overload,Salary,Market Competitiveness
+EMP0602,21,Sales,Sales Representative,173,2,77004.1,0,45.0,Role Overload,MonthlyHours,Tenure
+EMP0603,4,Marketing,Growth Hacker,159,2,69689.59,0,51.2,Role Overload,Market Competitiveness,LastPromotion
+EMP0604,17,HR,Recruiter,180,11,73760.98,1,17.6,Role Overload,MonthlyHours,Tenure
+EMP0605,8,Engineering,Engineering Manager,146,4,96171.98,0,46.1,Salary,MonthlyHours,LastPromotion
+EMP0606,8,HR,VP of HR,172,3,201004.2,0,45.7,Market Competitiveness,Role Overload,LastPromotion
+EMP0607,4,Sales,Account Executive,170,1,62899.94,0,45.0,Tenure,Salary,Market Competitiveness
+EMP0608,20,Finance,Finance Manager,171,10,122914.58,0,36.7,Salary,Tenure,Role Overload
+EMP0609,125,Operations,Operations Manager,142,44,107447.79,0,75.4,Tenure,Role Overload,Salary
+EMP0610,32,Sales,Account Executive,158,14,51683.04,1,50.6,LastPromotion,Market Competitiveness,Salary
+EMP0611,46,Engineering,Software Engineer,183,42,52974.88,0,56.1,Salary,Role Overload,LastPromotion
+EMP0612,30,HR,VP of HR,160,17,169875.33,0,49.6,Role Overload,Market Competitiveness,Salary
+EMP0613,25,Operations,Operations Manager,164,9,112614.97,0,20.9,MonthlyHours,LastPromotion,Tenure
+EMP0614,15,Finance,VP of Finance,175,8,192367.4,0,20.1,Salary,Role Overload,Tenure
+EMP0615,20,Engineering,Staff Engineer,185,17,126893.47,0,38.0,Tenure,Salary,Role Overload
+EMP0616,21,HR,VP of HR,162,19,190501.44,1,48.9,MonthlyHours,Role Overload,Salary
+EMP0617,18,Marketing,Marketing Specialist,189,7,70239.5,0,50.0,Tenure,LastPromotion,MonthlyHours
+EMP0618,13,Engineering,Staff Engineer,165,9,112213.73,0,41.3,Salary,LastPromotion,MonthlyHours
+EMP0619,16,HR,VP of HR,187,0,206373.9,0,28.8,Market Competitiveness,Tenure,MonthlyHours
+EMP0620,106,HR,HR Manager,160,10,120900.79,1,47.2,Role Overload,MonthlyHours,Tenure
+EMP0621,5,HR,VP of HR,166,2,168406.85,1,65.4,Market Competitiveness,Tenure,MonthlyHours
+EMP0622,34,Engineering,Software Engineer,162,0,60882.89,0,38.4,Role Overload,Salary,Market Competitiveness
+EMP0623,9,Engineering,Software Engineer,173,8,52373.45,0,46.7,Salary,MonthlyHours,Role Overload
+EMP0624,93,Finance,Financial Analyst,179,33,72374.3,0,37.2,LastPromotion,Tenure,Salary
+EMP0625,49,Engineering,Staff Engineer,166,15,122046.29,1,62.6,Salary,Tenure,MonthlyHours
+EMP0626,67,HR,VP of HR,187,23,162827.42,0,41.2,Tenure,Market Competitiveness,Role Overload
+EMP0627,46,Finance,Finance Manager,178,36,108455.75,0,40.8,Salary,LastPromotion,MonthlyHours
+EMP0628,6,Finance,Financial Analyst,145,4,63543.99,0,48.3,Market Competitiveness,Salary,Role Overload
+EMP0629,2,Finance,Accountant,162,0,61294.2,0,43.7,Role Overload,Salary,Tenure
+EMP0630,16,HR,Recruiter,178,0,52198.28,1,71.2,Salary,Market Competitiveness,MonthlyHours
+EMP0631,88,Finance,Accountant,174,21,61488.5,0,65.8,Tenure,Salary,Market Competitiveness
+EMP0632,8,Engineering,Engineering Manager,187,0,124959.96,0,55.3,Salary,MonthlyHours,Tenure
+EMP0633,28,Engineering,Engineering Manager,148,10,115805.39,0,52.3,Tenure,Role Overload,Market Competitiveness
+EMP0634,8,Marketing,Marketing Manager,176,4,96453.63,0,32.3,Salary,MonthlyHours,Role Overload
+EMP0635,14,Operations,Director of Operations,206,2,177857.89,0,63.5,MonthlyHours,Tenure,Role Overload
+EMP0636,49,Marketing,Growth Hacker,193,30,68641.43,0,57.5,Tenure,Role Overload,MonthlyHours
+EMP0637,19,Sales,Sales Representative,157,10,63848.72,1,62.1,Tenure,Market Competitiveness,Salary
+EMP0638,21,Engineering,Senior Engineer,169,8,85349.95,0,26.4,Tenure,LastPromotion,Role Overload
+EMP0639,48,HR,HR Generalist,143,18,59708.13,0,63.5,Tenure,Market Competitiveness,Salary
+EMP0640,6,Operations,Operations Specialist,190,4,51166.03,0,49.5,Tenure,MonthlyHours,Salary
+EMP0641,39,Operations,Operations Manager,181,28,122765.27,0,36.2,Market Competitiveness,Role Overload,MonthlyHours
+EMP0642,57,Marketing,Growth Hacker,184,29,57948.59,0,44.2,Tenure,Salary,LastPromotion
+EMP0643,14,Operations,Operations Manager,166,13,127718.54,1,26.0,Market Competitiveness,Salary,Tenure
+EMP0644,21,Engineering,Software Engineer,167,6,61623.0,0,51.7,Salary,MonthlyHours,Tenure
+EMP0645,64,Sales,Sales Manager,202,25,126463.34,0,45.6,Tenure,Market Competitiveness,LastPromotion
+EMP0646,10,Marketing,VP of Marketing,171,3,186511.55,0,45.4,LastPromotion,Market Competitiveness,MonthlyHours
+EMP0647,53,Operations,Operations Specialist,182,38,63359.07,1,82.0,Tenure,Salary,MonthlyHours
+EMP0648,47,Finance,Accountant,174,22,52420.81,0,44.9,Role Overload,LastPromotion,Salary
+EMP0649,23,Operations,Director of Operations,176,5,144515.05,1,33.5,Tenure,MonthlyHours,LastPromotion
+EMP0650,77,Marketing,Marketing Specialist,162,27,72587.2,0,36.7,Tenure,Role Overload,Salary
+EMP0651,14,Sales,Sales Representative,158,0,63493.2,0,57.6,MonthlyHours,Role Overload,Salary
+EMP0652,59,Engineering,Senior Engineer,176,9,89105.12,0,51.6,Tenure,Market Competitiveness,MonthlyHours
+EMP0653,228,Marketing,Marketing Manager,168,33,97283.96,0,36.7,Tenure,Market Competitiveness,Role Overload
+EMP0654,115,Engineering,Staff Engineer,177,49,125959.8,0,67.6,Tenure,Salary,Market Competitiveness
+EMP0655,10,Sales,Sales Representative,171,9,76099.61,0,58.5,Tenure,MonthlyHours,LastPromotion
+EMP0656,19,Operations,Operations Specialist,186,13,60173.03,0,55.2,Salary,LastPromotion,Tenure
+EMP0657,89,Marketing,VP of Marketing,168,3,175525.64,0,27.0,Role Overload,Tenure,Market Competitiveness
+EMP0658,34,Finance,Accountant,174,15,57705.33,1,45.2,Role Overload,Salary,LastPromotion
+EMP0659,9,Operations,Operations Specialist,159,1,66186.02,1,51.4,Salary,LastPromotion,Market Competitiveness
+EMP0660,70,HR,HR Generalist,153,31,63597.66,0,52.2,Tenure,Salary,LastPromotion
+EMP0661,70,Marketing,Marketing Manager,205,40,131030.41,1,72.7,Tenure,LastPromotion,Role Overload
+EMP0662,59,Operations,Operations Manager,147,18,129353.66,0,67.7,Tenure,Salary,Role Overload
+EMP0663,59,Engineering,Engineering Manager,173,20,97787.63,0,51.8,Tenure,Salary,Role Overload
+EMP0664,18,Finance,VP of Finance,177,14,196852.57,1,47.7,Salary,Tenure,Market Competitiveness
+EMP0665,18,Sales,Sales Representative,188,5,68314.17,0,30.3,Market Competitiveness,Tenure,Role Overload
+EMP0666,14,Sales,Sales Representative,173,5,58558.16,0,70.9,Tenure,Salary,MonthlyHours
+EMP0667,78,Engineering,Software Engineer,180,46,50563.41,0,62.4,Role Overload,Salary,Tenure
+EMP0668,37,Marketing,VP of Marketing,149,32,207827.75,1,33.1,Tenure,Role Overload,MonthlyHours
+EMP0669,69,HR,Recruiter,159,41,66847.23,0,52.9,Tenure,Role Overload,Market Competitiveness
+EMP0670,16,HR,Recruiter,179,5,65025.01,1,31.7,LastPromotion,MonthlyHours,Role Overload
+EMP0671,2,Sales,Sales Manager,166,0,132876.12,0,51.8,Tenure,Role Overload,LastPromotion
+EMP0672,19,Marketing,Growth Hacker,201,6,67402.2,0,56.1,Salary,Role Overload,LastPromotion
+EMP0673,18,Finance,Accountant,189,11,68924.99,0,35.4,LastPromotion,Role Overload,MonthlyHours
+EMP0674,26,Operations,Director of Operations,168,18,202592.75,0,45.4,Market Competitiveness,Role Overload,MonthlyHours
+EMP0675,34,Engineering,Software Engineer,165,3,60737.47,0,54.9,MonthlyHours,Salary,Role Overload
+EMP0676,72,Sales,VP of Sales,183,10,185223.29,0,24.5,Tenure,Salary,Role Overload
+EMP0677,25,Engineering,Software Engineer,175,2,63096.96,0,65.5,MonthlyHours,Salary,Tenure
+EMP0678,83,HR,HR Generalist,204,13,67746.32,0,62.3,Tenure,LastPromotion,Market Competitiveness
+EMP0679,17,Finance,Finance Manager,203,9,127224.33,0,49.2,LastPromotion,MonthlyHours,Role Overload
+EMP0680,23,Marketing,Marketing Manager,184,21,107393.88,0,65.0,Salary,MonthlyHours,Role Overload
+EMP0681,33,Marketing,Growth Hacker,180,11,55639.17,1,52.2,Market Competitiveness,Salary,Role Overload
+EMP0682,11,Operations,Operations Specialist,170,4,75711.98,0,49.7,Salary,Market Competitiveness,MonthlyHours
+EMP0683,31,Operations,Operations Specialist,189,25,52308.13,0,55.9,LastPromotion,MonthlyHours,Salary
+EMP0684,12,Finance,Financial Analyst,203,6,71390.97,0,55.4,Salary,Market Competitiveness,LastPromotion
+EMP0685,54,Engineering,Software Engineer,168,30,57414.86,1,76.1,Tenure,Salary,LastPromotion
+EMP0686,4,Marketing,Marketing Manager,185,2,107738.08,0,34.4,Market Competitiveness,MonthlyHours,Salary
+EMP0687,36,Operations,Operations Manager,190,5,125249.34,0,50.1,Salary,Tenure,LastPromotion
+EMP0688,16,Sales,Sales Manager,165,3,115057.66,0,60.6,Salary,Market Competitiveness,MonthlyHours
+EMP0689,24,Marketing,Growth Hacker,154,16,57133.49,1,53.8,Market Competitiveness,Salary,LastPromotion
+EMP0690,61,Sales,VP of Sales,157,50,172585.4,0,56.2,Tenure,LastPromotion,Role Overload
+EMP0691,98,HR,Recruiter,165,6,71288.73,0,32.6,Tenure,Market Competitiveness,Role Overload
+EMP0692,55,HR,HR Generalist,180,12,53683.83,0,55.5,Salary,MonthlyHours,Tenure
+EMP0693,107,Operations,Operations Specialist,171,28,71410.02,0,39.7,Salary,Market Competitiveness,Tenure
+EMP0694,7,HR,HR Manager,198,4,96882.45,0,68.3,Market Competitiveness,MonthlyHours,Role Overload
+EMP0695,12,Engineering,Staff Engineer,169,0,97020.3,0,46.4,Salary,LastPromotion,MonthlyHours
+EMP0696,40,HR,Recruiter,169,4,53532.29,0,30.9,MonthlyHours,Salary,Tenure
+EMP0697,52,Sales,VP of Sales,175,40,175284.91,0,65.3,Tenure,Salary,Role Overload
+EMP0698,3,HR,Recruiter,190,2,54438.57,0,72.8,MonthlyHours,Salary,Tenure
+EMP0699,13,Engineering,Engineering Manager,196,11,131549.1,0,48.9,MonthlyHours,Role Overload,Market Competitiveness
+EMP0700,21,Sales,Account Executive,162,19,51859.35,1,63.7,MonthlyHours,Salary,LastPromotion
+EMP0701,34,Marketing,Marketing Specialist,154,26,70799.28,0,35.6,Tenure,Role Overload,Market Competitiveness
+EMP0702,103,Engineering,Staff Engineer,141,9,126343.36,1,42.7,Tenure,Salary,Market Competitiveness
+EMP0703,64,Marketing,VP of Marketing,159,10,158744.2,0,21.3,Salary,Tenure,LastPromotion
+EMP0704,2,Sales,Account Executive,220,1,52127.82,0,72.4,MonthlyHours,Salary,LastPromotion
+EMP0705,44,Operations,Director of Operations,202,36,153618.36,0,38.3,Salary,MonthlyHours,LastPromotion
+EMP0706,84,Sales,VP of Sales,190,42,169577.76,0,69.4,Tenure,Role Overload,Market Competitiveness
+EMP0707,21,Engineering,Staff Engineer,201,10,106315.44,1,66.0,Role Overload,LastPromotion,Market Competitiveness
+EMP0708,60,Sales,VP of Sales,147,42,196882.88,0,57.9,Tenure,Market Competitiveness,LastPromotion
+EMP0709,6,Engineering,Staff Engineer,181,2,103672.57,0,7.0,LastPromotion,Market Competitiveness,MonthlyHours
+EMP0710,16,Marketing,Marketing Manager,145,3,116736.23,0,41.6,Market Competitiveness,MonthlyHours,Salary
+EMP0711,18,Sales,VP of Sales,160,3,176900.39,0,15.4,Tenure,Role Overload,MonthlyHours
+EMP0712,8,Engineering,Staff Engineer,193,0,130869.86,0,57.2,Salary,MonthlyHours,LastPromotion
+EMP0713,3,Operations,Operations Manager,179,1,125883.58,1,30.9,Salary,MonthlyHours,Role Overload
+EMP0714,21,Sales,Account Executive,184,8,52631.75,0,40.0,Market Competitiveness,Salary,Role Overload
+EMP0715,24,Finance,Financial Analyst,184,13,75240.51,0,37.7,Salary,Role Overload,MonthlyHours
+EMP0716,15,HR,HR Manager,174,13,122953.35,1,50.9,Market Competitiveness,LastPromotion,Role Overload
+EMP0717,3,Finance,Financial Analyst,168,0,61302.11,0,57.1,Salary,Market Competitiveness,MonthlyHours
+EMP0718,5,Marketing,Marketing Manager,149,3,129444.54,0,29.6,MonthlyHours,Salary,LastPromotion
+EMP0719,65,Marketing,VP of Marketing,183,3,157753.09,1,40.8,Tenure,MonthlyHours,Role Overload
+EMP0720,25,Operations,Director of Operations,183,0,195088.31,0,20.1,Market Competitiveness,LastPromotion,Role Overload
+EMP0721,57,Operations,Operations Manager,159,8,120619.33,0,49.5,Tenure,Salary,Market Competitiveness
+EMP0722,67,Finance,Accountant,188,19,73148.79,0,46.8,Tenure,LastPromotion,Salary
+EMP0723,164,HR,VP of HR,163,29,182262.1,0,48.1,Role Overload,MonthlyHours,Tenure
+EMP0724,41,Sales,Sales Representative,150,25,73003.0,0,42.5,Salary,Market Competitiveness,LastPromotion
+EMP0725,91,Marketing,Marketing Manager,172,19,119892.67,0,36.2,Salary,Role Overload,Tenure
+EMP0726,48,Finance,VP of Finance,195,8,148411.15,0,51.7,MonthlyHours,Market Competitiveness,Salary
+EMP0727,3,Finance,Accountant,180,2,73804.81,1,36.1,Role Overload,LastPromotion,Market Competitiveness
+EMP0728,215,Finance,Financial Analyst,188,17,72022.72,0,27.8,Tenure,Market Competitiveness,MonthlyHours
+EMP0729,9,HR,Recruiter,159,8,73536.9,0,34.5,Salary,MonthlyHours,Tenure
+EMP0730,8,Finance,Accountant,164,2,69337.44,0,42.7,MonthlyHours,Market Competitiveness,Role Overload
+EMP0731,51,Operations,Operations Specialist,211,33,74818.32,0,57.2,Tenure,Market Competitiveness,LastPromotion
+EMP0732,81,Finance,Financial Analyst,156,21,69296.01,0,34.0,Tenure,MonthlyHours,Salary
+EMP0733,80,Operations,Operations Specialist,193,0,71092.76,0,62.9,Tenure,Salary,MonthlyHours
+EMP0734,25,Sales,Sales Representative,153,15,70341.91,0,31.4,Salary,MonthlyHours,LastPromotion
+EMP0735,28,HR,VP of HR,213,0,207528.33,0,66.0,Salary,Tenure,LastPromotion
+EMP0736,25,Finance,Accountant,162,5,70131.74,0,34.7,Salary,Role Overload,Market Competitiveness
+EMP0737,99,Marketing,Marketing Manager,161,25,130902.49,0,57.4,Tenure,Salary,LastPromotion
+EMP0738,16,Finance,Finance Manager,197,2,95634.14,0,63.2,Tenure,MonthlyHours,Market Competitiveness
+EMP0739,10,Sales,Sales Manager,171,2,117162.34,1,47.7,Tenure,MonthlyHours,LastPromotion
+EMP0740,98,Finance,Accountant,198,3,76868.64,0,85.4,Tenure,LastPromotion,Market Competitiveness
+EMP0741,32,Finance,VP of Finance,181,23,191516.75,0,30.7,MonthlyHours,LastPromotion,Role Overload
+EMP0742,13,Marketing,Marketing Specialist,159,8,72829.93,1,44.5,MonthlyHours,LastPromotion,Role Overload
+EMP0743,77,HR,Recruiter,172,14,52266.59,0,56.5,Tenure,Salary,Role Overload
+EMP0744,12,Engineering,Senior Engineer,161,6,95116.66,0,37.5,MonthlyHours,Salary,Market Competitiveness
+EMP0745,50,Finance,Finance Manager,194,44,115728.73,0,82.0,Tenure,Salary,MonthlyHours
+EMP0746,16,HR,HR Manager,193,11,133185.61,0,82.1,Role Overload,Salary,Market Competitiveness
+EMP0747,7,HR,HR Generalist,162,6,53445.46,1,46.3,Salary,MonthlyHours,Market Competitiveness
+EMP0748,70,Marketing,VP of Marketing,171,55,165375.68,0,45.8,Tenure,LastPromotion,Role Overload
+EMP0749,16,Finance,Finance Manager,154,9,117269.29,1,22.3,Market Competitiveness,Salary,Tenure
+EMP0750,4,Engineering,Engineering Manager,168,3,96430.65,0,26.8,LastPromotion,Role Overload,Salary
+EMP0751,74,Engineering,Senior Engineer,148,34,83952.31,0,59.5,Market Competitiveness,Tenure,LastPromotion
+EMP0752,5,Sales,VP of Sales,154,3,160702.7,0,47.5,Role Overload,Tenure,MonthlyHours
+EMP0753,8,Engineering,Staff Engineer,165,6,106910.17,0,29.0,Salary,Role Overload,Market Competitiveness
+EMP0754,29,Operations,Director of Operations,156,3,167204.26,0,55.8,Role Overload,LastPromotion,Tenure
+EMP0755,4,Marketing,Marketing Manager,166,2,132798.68,0,45.6,Salary,LastPromotion,MonthlyHours
+EMP0756,45,Finance,VP of Finance,188,37,174331.81,0,39.6,Market Competitiveness,Role Overload,Tenure
+EMP0757,52,Finance,Finance Manager,164,28,100214.07,0,39.7,Role Overload,Tenure,Salary
+EMP0758,2,Finance,Finance Manager,162,0,120743.05,0,43.6,Salary,Tenure,Role Overload
+EMP0759,70,Marketing,Marketing Manager,179,32,98798.15,0,45.0,Tenure,Salary,MonthlyHours
+EMP0760,5,Engineering,Staff Engineer,203,0,101556.81,0,68.4,Tenure,MonthlyHours,Market Competitiveness
+EMP0761,16,Finance,Accountant,189,5,64834.65,0,61.9,Role Overload,Salary,Market Competitiveness
+EMP0762,11,Marketing,Marketing Specialist,187,2,75062.8,1,56.1,LastPromotion,Tenure,Market Competitiveness
+EMP0763,89,Operations,Director of Operations,158,40,191219.37,0,37.3,Salary,Tenure,LastPromotion
+EMP0764,55,Marketing,VP of Marketing,170,53,186183.45,0,69.7,Tenure,Salary,MonthlyHours
+EMP0765,117,Operations,Operations Specialist,153,22,75436.25,0,47.3,LastPromotion,Tenure,MonthlyHours
+EMP0766,4,Engineering,Senior Engineer,164,3,87720.96,0,38.6,LastPromotion,Market Competitiveness,Role Overload
+EMP0767,19,Engineering,Software Engineer,136,7,63249.97,0,60.5,Role Overload,Salary,Market Competitiveness
+EMP0768,59,Finance,VP of Finance,152,45,154949.71,0,50.3,Market Competitiveness,Tenure,Salary
+EMP0769,5,Operations,Operations Specialist,172,1,57533.46,0,55.8,Salary,Role Overload,Tenure
+EMP0770,79,Operations,Operations Manager,178,36,123300.91,0,35.5,Market Competitiveness,Role Overload,Tenure
+EMP0771,117,Engineering,Software Engineer,188,0,60034.15,0,61.2,Tenure,Salary,MonthlyHours
+EMP0772,21,Marketing,VP of Marketing,183,8,140689.28,0,38.5,Market Competitiveness,Role Overload,MonthlyHours
+EMP0773,46,Finance,Financial Analyst,170,40,56998.85,0,49.8,Role Overload,Salary,LastPromotion
+EMP0774,55,Finance,Accountant,181,35,68500.37,1,43.0,Tenure,MonthlyHours,Role Overload
+EMP0775,10,Sales,VP of Sales,157,7,203372.53,0,41.8,Market Competitiveness,Tenure,MonthlyHours
+EMP0776,60,Marketing,Marketing Manager,165,42,127046.86,0,68.7,Tenure,Market Competitiveness,LastPromotion
+EMP0777,25,Sales,Account Executive,159,18,70728.49,0,57.3,Market Competitiveness,Role Overload,Salary
+EMP0778,5,Sales,Sales Representative,154,4,57344.54,0,64.2,Role Overload,Salary,Tenure
+EMP0779,128,Operations,Operations Manager,196,4,107423.08,0,49.7,Market Competitiveness,Tenure,LastPromotion
+EMP0780,38,Operations,Operations Specialist,181,5,58504.27,1,53.6,LastPromotion,Market Competitiveness,Salary
+EMP0781,82,Marketing,VP of Marketing,178,34,189840.56,0,34.0,Tenure,Salary,Role Overload
+EMP0782,47,Engineering,Staff Engineer,196,25,114455.67,0,72.1,MonthlyHours,Market Competitiveness,Role Overload
+EMP0783,6,Engineering,Staff Engineer,163,3,100970.72,0,28.4,MonthlyHours,Tenure,LastPromotion
+EMP0784,19,Marketing,Growth Hacker,157,16,59820.64,0,48.8,Tenure,Salary,MonthlyHours
+EMP0785,19,HR,HR Manager,171,4,125841.53,0,46.0,Role Overload,LastPromotion,MonthlyHours
+EMP0786,52,Marketing,Marketing Manager,174,16,109679.93,0,36.9,LastPromotion,Role Overload,Tenure
+EMP0787,59,Sales,Account Executive,166,14,59797.07,0,48.3,Tenure,Salary,LastPromotion
+EMP0788,1,Finance,Financial Analyst,178,0,59079.02,0,35.5,Market Competitiveness,Salary,Tenure
+EMP0789,6,Marketing,Growth Hacker,188,1,61528.93,0,66.8,Salary,Market Competitiveness,LastPromotion
+EMP0790,18,Finance,Finance Manager,183,17,103169.54,0,45.8,Market Competitiveness,Role Overload,MonthlyHours
+EMP0791,25,Sales,VP of Sales,187,11,162391.57,0,39.4,Salary,MonthlyHours,Role Overload
+EMP0792,61,Marketing,Growth Hacker,157,28,64578.35,0,54.8,Tenure,Salary,LastPromotion
+EMP0793,10,Operations,Operations Specialist,182,9,68823.81,1,45.6,Tenure,MonthlyHours,Market Competitiveness
+EMP0794,8,Marketing,VP of Marketing,182,2,206929.3,0,44.6,LastPromotion,Market Competitiveness,MonthlyHours
+EMP0795,45,Engineering,Senior Engineer,166,18,102749.08,0,35.1,Role Overload,Tenure,LastPromotion
+EMP0796,105,Operations,Operations Manager,171,24,124869.73,1,46.5,Role Overload,Salary,Tenure
+EMP0797,45,Engineering,Senior Engineer,183,23,107092.93,1,29.2,LastPromotion,MonthlyHours,Tenure
+EMP0798,19,Operations,Operations Manager,161,16,113504.77,0,34.7,Role Overload,Salary,Market Competitiveness
+EMP0799,77,Operations,Operations Specialist,181,51,73868.29,0,54.3,Salary,Market Competitiveness,Tenure
+EMP0800,28,Sales,Account Executive,195,27,62525.31,0,84.0,Role Overload,Salary,LastPromotion
+EMP0801,49,HR,Recruiter,146,41,57765.71,0,83.3,Tenure,Salary,LastPromotion
+EMP0802,69,Finance,Finance Manager,173,43,123123.76,0,38.0,Market Competitiveness,Tenure,Role Overload
+EMP0803,116,HR,VP of HR,187,58,180436.3,0,61.9,Tenure,MonthlyHours,Salary
+EMP0804,28,Sales,Sales Representative,152,6,61870.05,0,52.7,Market Competitiveness,Salary,Role Overload
+EMP0805,52,Finance,Finance Manager,160,40,100994.51,0,50.0,MonthlyHours,Tenure,Salary
+EMP0806,56,HR,HR Manager,187,12,107345.31,0,29.3,Tenure,Salary,LastPromotion
+EMP0807,8,Marketing,Growth Hacker,192,3,61589.93,0,66.1,MonthlyHours,Salary,LastPromotion
+EMP0808,43,Sales,VP of Sales,190,13,156937.24,0,42.0,Salary,LastPromotion,Market Competitiveness
+EMP0809,18,Engineering,Senior Engineer,172,12,107044.58,0,43.0,Role Overload,LastPromotion,Salary
+EMP0810,13,Finance,Finance Manager,167,12,131312.63,0,22.7,MonthlyHours,LastPromotion,Tenure
+EMP0811,113,Sales,Sales Manager,188,6,125561.47,0,47.8,MonthlyHours,Market Competitiveness,Tenure
+EMP0812,102,Engineering,Engineering Manager,167,33,134771.52,0,47.0,Tenure,Role Overload,LastPromotion
+EMP0813,130,HR,VP of HR,181,28,148144.39,0,33.0,Tenure,Salary,MonthlyHours
+EMP0814,71,Finance,VP of Finance,166,34,172012.16,1,14.1,Role Overload,Tenure,Market Competitiveness
+EMP0815,5,Sales,Account Executive,202,2,71877.97,0,58.8,Salary,LastPromotion,Market Competitiveness
+EMP0816,29,Engineering,Software Engineer,161,3,76764.36,0,36.0,Role Overload,MonthlyHours,Salary
+EMP0817,19,Finance,VP of Finance,195,13,199199.6,0,60.6,LastPromotion,Tenure,Salary
+EMP0818,19,Sales,Sales Manager,166,3,125881.27,0,41.9,Salary,Market Competitiveness,Tenure
+EMP0819,57,Engineering,Engineering Manager,167,3,130996.38,0,37.8,Tenure,Salary,Market Competitiveness
+EMP0820,8,HR,VP of HR,160,3,164115.41,0,28.1,Role Overload,Tenure,LastPromotion
+EMP0821,1,Marketing,VP of Marketing,168,0,194318.38,0,43.0,Tenure,Salary,Role Overload
+EMP0822,86,Marketing,VP of Marketing,178,36,144640.31,0,56.7,Tenure,Market Competitiveness,Salary
+EMP0823,63,Operations,Director of Operations,173,21,188122.54,0,50.5,Tenure,MonthlyHours,Market Competitiveness
+EMP0824,180,Sales,Sales Representative,170,7,77471.67,0,36.3,Tenure,Salary,LastPromotion
+EMP0825,26,Finance,VP of Finance,151,25,159842.28,0,47.1,LastPromotion,MonthlyHours,Market Competitiveness
+EMP0826,60,Sales,Account Executive,183,26,66982.34,0,40.8,Market Competitiveness,Salary,Tenure
+EMP0827,28,Sales,Sales Representative,142,6,66480.41,0,22.4,Tenure,Salary,Market Competitiveness
+EMP0828,32,Marketing,VP of Marketing,161,31,202789.59,0,18.9,LastPromotion,Tenure,MonthlyHours
+EMP0829,2,HR,HR Manager,218,1,95523.06,0,58.9,Tenure,Role Overload,Market Competitiveness
+EMP0830,9,Marketing,Marketing Manager,171,2,123397.32,0,35.6,Salary,MonthlyHours,Market Competitiveness
+EMP0831,34,Finance,VP of Finance,187,3,185396.89,0,22.3,Role Overload,MonthlyHours,Market Competitiveness
+EMP0832,1,Engineering,Engineering Manager,165,0,131540.44,0,38.3,Role Overload,MonthlyHours,Salary
+EMP0833,38,HR,Recruiter,179,14,68873.64,0,42.3,Tenure,MonthlyHours,Market Competitiveness
+EMP0834,80,Sales,Sales Manager,175,27,130333.99,0,52.1,Tenure,LastPromotion,MonthlyHours
+EMP0835,73,Engineering,Senior Engineer,163,51,86412.21,0,70.6,Tenure,LastPromotion,Salary
+EMP0836,12,Marketing,VP of Marketing,132,10,146287.8,0,29.7,Tenure,Market Competitiveness,Salary
+EMP0837,27,Operations,Operations Specialist,156,2,63460.26,1,55.2,Market Competitiveness,Salary,Tenure
+EMP0838,7,HR,Recruiter,163,0,61693.89,0,43.7,LastPromotion,Salary,MonthlyHours
+EMP0839,33,Marketing,Growth Hacker,178,20,73700.18,0,23.2,Tenure,Salary,MonthlyHours
+EMP0840,131,Sales,VP of Sales,185,43,164587.07,0,47.8,Tenure,MonthlyHours,Market Competitiveness
+EMP0841,23,Finance,Finance Manager,200,20,99543.49,0,59.7,Market Competitiveness,MonthlyHours,Role Overload
+EMP0842,7,Operations,Operations Specialist,173,5,63462.01,1,71.0,MonthlyHours,Salary,Role Overload
+EMP0843,7,Engineering,Engineering Manager,189,6,128829.8,0,56.3,Salary,MonthlyHours,Role Overload
+EMP0844,31,Marketing,Marketing Manager,164,21,107059.54,1,37.6,Tenure,Role Overload,MonthlyHours
+EMP0845,18,Sales,Sales Representative,161,11,68351.64,0,27.5,Market Competitiveness,Tenure,LastPromotion
+EMP0846,92,Sales,VP of Sales,175,33,179187.74,0,34.1,Role Overload,MonthlyHours,Tenure
+EMP0847,175,Operations,Operations Manager,166,48,113811.85,0,56.8,Tenure,MonthlyHours,Role Overload
+EMP0848,34,Sales,Sales Manager,172,25,129440.35,0,30.5,LastPromotion,Role Overload,Tenure
+EMP0849,38,Finance,VP of Finance,183,12,155698.09,0,37.7,Role Overload,Tenure,LastPromotion
+EMP0850,17,Operations,Director of Operations,180,9,205685.31,1,26.2,Tenure,MonthlyHours,Role Overload
+EMP0851,14,Marketing,Marketing Specialist,169,1,54890.2,1,50.0,Salary,Role Overload,MonthlyHours
+EMP0852,3,HR,Recruiter,171,0,59478.75,0,60.3,Tenure,Salary,Role Overload
+EMP0853,36,HR,Recruiter,178,1,55479.82,0,55.3,MonthlyHours,Salary,Role Overload
+EMP0854,133,Engineering,Software Engineer,196,43,64757.99,0,96.6,Tenure,Salary,Market Competitiveness
+EMP0855,1,Finance,Accountant,190,0,59993.2,0,58.0,Tenure,Market Competitiveness,Salary
+EMP0856,6,HR,VP of HR,158,3,172365.3,0,54.4,Tenure,Salary,LastPromotion
+EMP0857,157,Sales,Sales Manager,148,28,101805.21,0,44.4,Tenure,MonthlyHours,Salary
+EMP0858,9,HR,Recruiter,191,8,68327.85,1,53.6,Salary,MonthlyHours,LastPromotion
+EMP0859,3,HR,HR Generalist,177,0,61031.38,0,45.6,MonthlyHours,Role Overload,Salary
+EMP0860,51,Marketing,Marketing Specialist,193,10,67133.31,0,74.0,Role Overload,Tenure,Salary
+EMP0861,11,Engineering,Staff Engineer,165,6,119997.69,0,28.9,MonthlyHours,Salary,LastPromotion
+EMP0862,97,Sales,VP of Sales,174,48,170523.38,0,63.7,Tenure,MonthlyHours,LastPromotion
+EMP0863,52,Sales,Sales Manager,172,18,97091.05,0,47.8,Role Overload,LastPromotion,Tenure
+EMP0864,39,HR,HR Manager,183,22,116340.86,0,36.1,Role Overload,Market Competitiveness,LastPromotion
+EMP0865,16,Sales,Sales Manager,160,8,95869.55,0,54.0,MonthlyHours,LastPromotion,Role Overload
+EMP0866,6,Operations,Operations Specialist,169,2,63715.19,0,38.5,Tenure,Salary,Role Overload
+EMP0867,5,Operations,Director of Operations,159,2,204574.92,1,26.3,MonthlyHours,Market Competitiveness,Tenure
+EMP0868,71,Finance,Accountant,175,42,64480.21,0,52.6,Market Competitiveness,Salary,Role Overload
+EMP0869,45,Engineering,Software Engineer,185,34,71138.33,0,46.6,MonthlyHours,LastPromotion,Salary
+EMP0870,2,Marketing,VP of Marketing,168,0,174151.36,0,39.0,Salary,MonthlyHours,Market Competitiveness
+EMP0871,54,HR,VP of HR,155,38,190131.52,0,55.8,Tenure,Market Competitiveness,LastPromotion
+EMP0872,46,Sales,Sales Representative,174,38,56689.33,0,61.9,Tenure,Salary,Role Overload
+EMP0873,80,Marketing,Marketing Manager,205,44,133436.17,1,70.7,Tenure,Role Overload,Market Competitiveness
+EMP0874,11,Marketing,Marketing Specialist,176,3,57063.81,0,71.7,Tenure,Salary,Role Overload
+EMP0875,35,Sales,Sales Manager,154,4,96254.46,0,35.9,Tenure,Salary,Role Overload
+EMP0876,19,Engineering,Software Engineer,204,11,67761.22,0,80.6,Salary,Tenure,MonthlyHours
+EMP0877,34,Operations,Director of Operations,158,8,147575.87,1,56.9,Salary,Role Overload,MonthlyHours
+EMP0878,28,Operations,Operations Specialist,160,3,57585.46,1,51.4,Role Overload,Salary,Market Competitiveness
+EMP0879,10,Finance,Accountant,178,2,62021.04,0,68.8,MonthlyHours,Salary,Role Overload
+EMP0880,47,HR,VP of HR,180,26,197991.12,0,44.0,LastPromotion,Role Overload,Market Competitiveness
+EMP0881,75,Marketing,Growth Hacker,135,45,64031.35,0,73.2,Role Overload,Tenure,Salary
+EMP0882,58,Operations,Operations Specialist,149,34,75502.26,1,48.8,MonthlyHours,Tenure,Market Competitiveness
+EMP0883,13,Marketing,Marketing Specialist,171,10,61273.12,1,67.9,Role Overload,Salary,Market Competitiveness
+EMP0884,51,Finance,Finance Manager,167,19,99021.21,0,43.9,MonthlyHours,Tenure,Salary
+EMP0885,26,HR,HR Manager,168,13,105743.97,0,34.6,Salary,Tenure,Market Competitiveness
+EMP0886,54,Marketing,Marketing Specialist,156,18,77706.56,0,32.3,Salary,Tenure,Market Competitiveness
+EMP0887,8,Operations,Director of Operations,184,7,159609.39,0,46.8,LastPromotion,MonthlyHours,Tenure
+EMP0888,60,HR,Recruiter,174,16,50664.06,0,56.2,MonthlyHours,Salary,Tenure
+EMP0889,99,HR,Recruiter,180,3,72968.2,0,50.1,Tenure,Role Overload,Market Competitiveness
+EMP0890,30,Operations,Operations Specialist,177,15,52477.63,0,58.0,Market Competitiveness,Salary,LastPromotion
+EMP0891,6,Sales,Account Executive,186,0,61122.78,0,45.9,Market Competitiveness,Salary,LastPromotion
+EMP0892,4,Marketing,VP of Marketing,166,2,164909.21,0,51.8,Market Competitiveness,LastPromotion,Role Overload
+EMP0893,103,Finance,Financial Analyst,162,13,75328.95,0,46.6,Tenure,Salary,Market Competitiveness
+EMP0894,9,Engineering,Software Engineer,177,1,69467.68,0,40.6,Market Competitiveness,Salary,LastPromotion
+EMP0895,11,Finance,Financial Analyst,188,8,68233.54,1,42.6,Role Overload,Tenure,Market Competitiveness
+EMP0896,3,Engineering,Senior Engineer,181,1,105630.38,0,44.6,Role Overload,LastPromotion,Salary
+EMP0897,26,Marketing,VP of Marketing,194,9,180695.66,0,61.4,Tenure,Market Competitiveness,MonthlyHours
+EMP0898,39,Marketing,Marketing Manager,166,6,131499.4,0,41.3,Role Overload,LastPromotion,Tenure
+EMP0899,46,HR,Recruiter,177,38,50227.03,0,47.5,Market Competitiveness,Salary,MonthlyHours
+EMP0900,8,Finance,Financial Analyst,169,3,55567.2,0,49.3,Salary,MonthlyHours,Role Overload
+EMP0901,23,Operations,Director of Operations,176,15,149908.65,0,33.0,Market Competitiveness,LastPromotion,Tenure
+EMP0902,55,HR,Recruiter,185,19,73202.68,0,35.2,Tenure,Salary,Market Competitiveness
+EMP0903,13,Engineering,Engineering Manager,160,5,100946.9,0,47.6,Tenure,LastPromotion,Role Overload
+EMP0904,1,HR,VP of HR,192,0,149430.1,0,80.4,Market Competitiveness,MonthlyHours,Salary
+EMP0905,71,Finance,VP of Finance,163,20,161341.56,1,26.0,MonthlyHours,LastPromotion,Tenure
+EMP0906,25,Engineering,Engineering Manager,140,21,124003.72,0,42.0,Market Competitiveness,Role Overload,MonthlyHours
+EMP0907,19,Sales,VP of Sales,170,14,186969.68,0,33.2,Market Competitiveness,Salary,MonthlyHours
+EMP0908,8,Engineering,Senior Engineer,170,6,88881.92,0,32.3,Market Competitiveness,Tenure,Salary
+EMP0909,9,Engineering,Staff Engineer,173,7,115666.57,0,32.1,MonthlyHours,Salary,Role Overload
+EMP0910,4,HR,HR Manager,151,0,97465.68,1,47.9,Market Competitiveness,MonthlyHours,LastPromotion
+EMP0911,38,Marketing,Growth Hacker,160,12,67091.03,1,32.9,Market Competitiveness,LastPromotion,Tenure
+EMP0912,7,Marketing,VP of Marketing,193,1,205338.93,0,51.7,Salary,Role Overload,Tenure
+EMP0913,40,Finance,Accountant,163,28,55228.52,0,56.7,Tenure,Salary,Role Overload
+EMP0914,20,Sales,Sales Manager,193,18,99627.01,1,58.1,Tenure,MonthlyHours,LastPromotion
+EMP0915,38,Sales,Sales Representative,174,20,74688.23,0,22.1,Role Overload,MonthlyHours,Salary
+EMP0916,1,Finance,VP of Finance,191,0,174271.13,0,57.9,LastPromotion,Market Competitiveness,Salary
+EMP0917,16,Marketing,VP of Marketing,162,13,143559.78,0,44.9,Salary,LastPromotion,Market Competitiveness
+EMP0918,20,Sales,Account Executive,174,3,59957.42,0,47.3,Tenure,Salary,Role Overload
+EMP0919,45,Operations,Operations Specialist,196,33,63726.22,0,76.0,Role Overload,Salary,Market Competitiveness
+EMP0920,23,Operations,Operations Specialist,156,0,73807.49,0,18.1,LastPromotion,Role Overload,MonthlyHours
+EMP0921,3,Sales,Account Executive,195,2,65753.95,0,53.4,LastPromotion,Salary,Role Overload
+EMP0922,43,Finance,VP of Finance,178,22,159288.97,0,32.7,Tenure,LastPromotion,MonthlyHours
+EMP0923,24,Operations,Director of Operations,143,11,175549.51,0,40.1,Salary,LastPromotion,Market Competitiveness
+EMP0924,13,Sales,Sales Representative,166,9,69574.97,1,33.3,Tenure,Market Competitiveness,MonthlyHours
+EMP0925,12,Finance,Financial Analyst,188,2,51099.09,0,52.3,Role Overload,Salary,MonthlyHours
+EMP0926,55,Marketing,Growth Hacker,201,12,68186.91,0,55.8,Market Competitiveness,Tenure,Role Overload
+EMP0927,15,Marketing,Growth Hacker,168,13,72956.31,0,41.9,MonthlyHours,Tenure,LastPromotion
+EMP0928,65,Finance,Accountant,173,12,58934.1,0,59.8,Market Competitiveness,Salary,LastPromotion
+EMP0929,9,Engineering,Engineering Manager,174,7,127002.18,0,25.7,Role Overload,MonthlyHours,Salary
+EMP0930,8,Sales,Account Executive,167,7,54110.45,0,61.3,Tenure,Salary,LastPromotion
+EMP0931,57,Engineering,Staff Engineer,174,47,124437.42,0,43.9,MonthlyHours,Market Competitiveness,Tenure
+EMP0932,5,HR,VP of HR,180,3,161950.26,0,34.0,Role Overload,Tenure,Market Competitiveness
+EMP0933,14,Sales,Sales Representative,157,9,59776.49,0,63.9,LastPromotion,Salary,Market Competitiveness
+EMP0934,25,Marketing,Growth Hacker,163,11,56930.17,0,62.0,Salary,MonthlyHours,LastPromotion
+EMP0935,47,Finance,Finance Manager,192,10,103582.26,0,68.5,Salary,Tenure,MonthlyHours
+EMP0936,15,Operations,Operations Specialist,169,2,64935.06,0,42.6,Role Overload,Salary,MonthlyHours
+EMP0937,18,Engineering,Software Engineer,179,17,71515.2,0,41.7,Salary,Market Competitiveness,LastPromotion
+EMP0938,32,Marketing,Marketing Specialist,173,19,66048.18,1,34.4,Market Competitiveness,Salary,LastPromotion
+EMP0939,54,Engineering,Senior Engineer,173,24,96796.49,0,44.7,MonthlyHours,Tenure,Market Competitiveness
+EMP0940,39,Engineering,Engineering Manager,184,6,118841.21,0,36.3,Tenure,Role Overload,MonthlyHours
+EMP0941,72,Sales,Account Executive,176,28,72165.92,0,39.9,Tenure,Salary,Role Overload
+EMP0942,82,Operations,Director of Operations,169,21,148284.17,1,44.4,Role Overload,MonthlyHours,Tenure
+EMP0943,19,Marketing,VP of Marketing,168,18,140474.99,0,50.2,LastPromotion,Role Overload,MonthlyHours
+EMP0944,3,HR,Recruiter,145,1,61209.0,0,61.9,MonthlyHours,Salary,Role Overload
+EMP0945,21,Engineering,Software Engineer,165,17,69941.27,0,31.6,Role Overload,MonthlyHours,Tenure
+EMP0946,17,Engineering,Engineering Manager,180,16,127890.99,0,57.2,Tenure,Salary,MonthlyHours
+EMP0947,12,Sales,Account Executive,177,11,52359.58,0,42.0,MonthlyHours,Salary,Tenure
+EMP0948,9,Sales,Sales Representative,180,8,60444.2,0,61.1,MonthlyHours,Salary,Market Competitiveness
+EMP0949,1,Operations,Operations Specialist,183,0,52714.66,0,52.3,Market Competitiveness,Salary,LastPromotion
+EMP0950,17,Marketing,Marketing Specialist,169,12,74357.37,0,45.7,LastPromotion,Market Competitiveness,MonthlyHours
+EMP0951,275,Marketing,Growth Hacker,164,29,67357.14,0,36.7,Tenure,Salary,Market Competitiveness
+EMP0952,13,Marketing,Marketing Specialist,161,5,75582.75,0,28.2,Market Competitiveness,Role Overload,LastPromotion
+EMP0953,7,Marketing,Growth Hacker,193,4,72444.96,0,52.1,LastPromotion,Market Competitiveness,Tenure
+EMP0954,29,HR,HR Generalist,216,12,66792.13,0,56.5,Tenure,LastPromotion,MonthlyHours
+EMP0955,114,Finance,Finance Manager,172,19,113803.84,0,33.1,Tenure,Salary,Role Overload
+EMP0956,111,HR,HR Manager,154,46,106735.59,0,60.1,Tenure,Role Overload,Salary
+EMP0957,62,Operations,Director of Operations,153,54,191986.25,0,50.1,Salary,Tenure,LastPromotion
+EMP0958,101,HR,Recruiter,166,56,74810.07,0,53.5,LastPromotion,Tenure,Role Overload
+EMP0959,1,Finance,VP of Finance,168,0,158214.8,0,37.6,Tenure,Role Overload,Market Competitiveness
+EMP0960,81,Engineering,Software Engineer,193,56,64129.95,1,99.9,MonthlyHours,Salary,Tenure
+EMP0961,81,Marketing,Marketing Manager,181,7,115769.07,1,22.5,Tenure,Market Competitiveness,LastPromotion
+EMP0962,5,Finance,Finance Manager,170,2,134408.29,0,39.3,Salary,Market Competitiveness,Role Overload
+EMP0963,6,Marketing,VP of Marketing,158,5,176873.82,0,34.6,Role Overload,Market Competitiveness,MonthlyHours
+EMP0964,6,Operations,Director of Operations,193,4,192003.61,1,71.2,LastPromotion,Market Competitiveness,Salary
+EMP0965,15,HR,HR Generalist,175,1,62380.32,0,44.1,MonthlyHours,Salary,Market Competitiveness
+EMP0966,35,HR,HR Generalist,164,16,68207.02,0,56.4,Role Overload,Salary,MonthlyHours
+EMP0967,20,Marketing,Marketing Specialist,160,3,54707.95,1,44.3,LastPromotion,Salary,Tenure
+EMP0968,10,HR,VP of HR,175,2,184331.85,0,22.8,LastPromotion,Tenure,Market Competitiveness
+EMP0969,4,Finance,Accountant,162,3,50294.73,1,57.2,Salary,Tenure,LastPromotion
+EMP0970,66,HR,VP of HR,153,55,183676.19,0,52.0,MonthlyHours,Salary,Tenure
+EMP0971,31,Marketing,Growth Hacker,166,21,75620.91,1,40.6,Tenure,MonthlyHours,Salary
+EMP0972,27,Marketing,Growth Hacker,169,17,54968.09,0,65.3,Role Overload,MonthlyHours,Salary
+EMP0973,6,Finance,Accountant,194,1,63281.12,0,73.1,Salary,Role Overload,Market Competitiveness
+EMP0974,23,Operations,Operations Manager,135,18,97593.37,0,31.7,Tenure,Role Overload,Market Competitiveness
+EMP0975,20,Operations,Director of Operations,149,7,163315.99,0,42.5,MonthlyHours,Salary,Market Competitiveness
+EMP0976,27,Sales,VP of Sales,165,20,205049.65,0,42.5,Salary,Tenure,LastPromotion
+EMP0977,33,Operations,Director of Operations,181,4,207338.44,0,36.1,Salary,Tenure,MonthlyHours
+EMP0978,5,HR,HR Manager,186,4,119900.63,0,41.5,LastPromotion,Market Competitiveness,MonthlyHours
+EMP0979,10,Operations,Director of Operations,167,0,195328.52,0,62.5,Salary,MonthlyHours,Tenure
+EMP0980,24,Finance,Finance Manager,179,18,108881.88,0,53.3,LastPromotion,Market Competitiveness,Salary
+EMP0981,14,Marketing,Marketing Manager,180,12,128561.97,1,34.8,MonthlyHours,Salary,Market Competitiveness
+EMP0982,99,Operations,Operations Manager,174,21,102370.6,0,38.3,Tenure,Salary,MonthlyHours
+EMP0983,103,Engineering,Software Engineer,138,57,60088.99,0,63.2,LastPromotion,Salary,Tenure
+EMP0984,92,Sales,Sales Representative,208,41,66904.35,0,71.3,Role Overload,Tenure,LastPromotion
+EMP0985,5,Operations,Operations Specialist,171,3,67334.61,0,30.6,LastPromotion,Salary,Role Overload
+EMP0986,62,HR,HR Generalist,177,27,51273.62,1,69.8,Tenure,Salary,LastPromotion
+EMP0987,47,Operations,Operations Specialist,171,12,58665.48,1,57.8,Salary,MonthlyHours,LastPromotion
+EMP0988,24,Finance,VP of Finance,184,22,169593.11,0,30.2,Role Overload,MonthlyHours,LastPromotion
+EMP0989,61,Operations,Operations Manager,180,17,123482.54,0,21.7,Tenure,Role Overload,LastPromotion
+EMP0990,230,Engineering,Senior Engineer,163,29,83796.33,0,49.4,Tenure,LastPromotion,Role Overload
+EMP0991,1,HR,HR Generalist,222,0,55635.01,0,66.9,Salary,MonthlyHours,Role Overload
+EMP0992,39,Sales,Account Executive,165,6,74643.68,1,44.6,LastPromotion,Market Competitiveness,Salary
+EMP0993,16,Operations,Operations Specialist,189,4,60220.71,1,49.4,Salary,Market Competitiveness,Role Overload
+EMP0994,2,Finance,Financial Analyst,185,1,72080.29,0,33.5,Salary,LastPromotion,Role Overload
+EMP0995,6,Finance,VP of Finance,205,3,143584.44,0,66.0,MonthlyHours,Salary,Role Overload
+EMP0996,7,Marketing,Marketing Specialist,166,5,51175.17,0,47.9,Salary,MonthlyHours,Role Overload
+EMP0997,101,Marketing,VP of Marketing,182,25,151009.15,0,48.9,LastPromotion,Tenure,Salary
+EMP0998,15,Marketing,Growth Hacker,182,3,70908.34,1,44.5,Salary,Tenure,MonthlyHours
+EMP0999,23,Engineering,Senior Engineer,170,6,92989.03,0,47.4,Tenure,LastPromotion,MonthlyHours
+EMP1000,7,HR,HR Generalist,160,0,68958.3,0,31.4,Role Overload,Market Competitiveness,MonthlyHours
