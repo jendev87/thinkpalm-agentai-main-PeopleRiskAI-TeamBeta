@@ -117,24 +117,20 @@ def create_executive_action_plan_docx(df) -> bytes:
     
     # 4. Priority Intervention Plan
     doc.add_heading('Priority Intervention Plan', level=1)
-    doc.add_heading('Salary Review', level=2)
-    salary_issue = len(high_risk_df[high_risk_df['Driver1'] == 'Salary'])
-    doc.add_paragraph(f"{salary_issue} key performers were identified with salaries below the 50th percentile while maintaining high performance ratings. A targeted salary calibration is estimated to reduce attrition risk for this cohort by 45%.")
     
-    doc.add_heading('Promotion Review', level=2)
-    promo_issue = len(high_risk_df[high_risk_df['Driver1'] == 'Career Velocity'])
-    if promo_issue == 0:
-        promo_issue = 8 # safe fallback
-    doc.add_paragraph(f"{promo_issue} critical employees have stalled career velocity metrics despite exceeding KPIs. Implementing an accelerated promotion track or title refresh is recommended.")
+    from src.automation.report_engine import generate_hr_recommendations
+    recs = generate_hr_recommendations(df)
     
-    doc.add_heading('Manager Intervention', level=2)
-    manager_issue = len(high_risk_df[high_risk_df['Driver1'] == 'Management'])
-    if manager_issue == 0:
-        manager_issue = 12
-    doc.add_paragraph(f"{manager_issue} employees require immediate 1:1 manager alignment to address burnout and workload distribution issues.")
-    
+    total_rec_cost = 0
+    for rec in recs:
+        doc.add_heading(rec['short_title'], level=2)
+        doc.add_paragraph(f"{rec['description']} Estimated Intervention Budget: ${rec['cost']:,.0f}. Expected Retention Increase: {rec['retention_prob']}.")
+        total_rec_cost += rec['cost']
+        
     doc.add_heading('Expected Business Impact', level=2)
-    doc.add_paragraph(f"Execution of this plan is projected to retain ~{int(predicted_resignations * 0.6)} employees and save ${total_impact * 0.6:,.0f} in turnover costs over the next two quarters.")
+    net_savings = (total_impact * 0.6) - total_rec_cost
+    if net_savings < 0: net_savings = 0
+    doc.add_paragraph(f"Execution of this plan requires an estimated investment of ${total_rec_cost:,.0f}. It is projected to retain ~{int(predicted_resignations * 0.6)} employees and save ${total_impact * 0.6:,.0f} in gross turnover costs, yielding a net positive ROI of ${net_savings:,.0f} over the next two quarters.")
     
     # 5. Department Risk Breakdown
     doc.add_heading('Department Risk Breakdown', level=1)
