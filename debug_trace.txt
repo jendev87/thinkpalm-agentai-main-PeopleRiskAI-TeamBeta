@@ -1,0 +1,1 @@
+Entered __GENERATE_EXEC_PLAN__ block\nBefore docx generation\n
