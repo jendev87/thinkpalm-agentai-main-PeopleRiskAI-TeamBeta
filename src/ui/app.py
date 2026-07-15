@@ -307,6 +307,16 @@ def render_header():
         height: auto;
         min-width: 1.6rem;
     }
+
+    .st-emotion-cache-1vo6xi6 {
+        width: 100%;
+        height: auto;
+        max-width: 100%;
+        min-width: 1rem;
+        position: relative;
+        overflow: visible;
+        margin-left: -8px !important;
+    }
     
     .stApp [data-testid="stSidebar"] button[kind="secondary"][data-testid="stBaseButton-secondary"],
     .stApp [data-testid="stSidebar"] button[kind="primary"][data-testid="stBaseButton-primary"] {
@@ -1089,12 +1099,12 @@ def render_sidebar(col_nav):
         }
         [data-testid="stSidebar"] .block-container,
         [data-testid="stSidebar"] [data-testid="stSidebarUserContent"] {
-            padding-left: 2px !important;
-            padding-right: 8px !important;
+            padding-left: 0px !important;
+            padding-right: 10px !important;
             padding-top: 4px !important;
         }
         [data-testid="stSidebar"] [data-testid="stSidebarHeader"] {
-            padding: 4px 8px 4px 8px !important;
+            padding: 4px 8px !important;
             justify-content: center !important;
         }
         [data-testid="stSidebar"] [data-testid="stLogoSpacer"] {
@@ -1105,6 +1115,15 @@ def render_sidebar(col_nav):
             position: static !important;
             justify-content: center !important;
             margin-bottom: 10px !important;
+        }
+        .stApp [data-testid="stSidebar"] .st-key-nav_risk_overview,
+        .stApp [data-testid="stSidebar"] .st-key-nav_top_drivers,
+        .stApp [data-testid="stSidebar"] .st-key-nav_high_risk_roster,
+        .stApp [data-testid="stSidebar"] .st-key-nav_executive_summary,
+        .stApp [data-testid="stSidebar"] .st-key-nav_configuration {
+            display: flex !important;
+            justify-content: center !important;
+            width: 100% !important;
         }
         .stApp [data-testid="stSidebar"] .st-key-nav_risk_overview button [data-testid="stMarkdownContainer"],
         .stApp [data-testid="stSidebar"] .st-key-nav_top_drivers button [data-testid="stMarkdownContainer"],
@@ -1119,8 +1138,22 @@ def render_sidebar(col_nav):
         .stApp [data-testid="stSidebar"] .st-key-nav_executive_summary button,
         .stApp [data-testid="stSidebar"] .st-key-nav_configuration button {
             justify-content: center !important;
+            align-items: center !important;
             padding: 8px 0 !important;
-            min-width: 35px !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+            width: 44px !important;
+            min-width: 44px !important;
+            max-width: 44px !important;
+        }
+        .stApp [data-testid="stSidebar"] .st-key-nav_risk_overview button > div,
+        .stApp [data-testid="stSidebar"] .st-key-nav_top_drivers button > div,
+        .stApp [data-testid="stSidebar"] .st-key-nav_high_risk_roster button > div,
+        .stApp [data-testid="stSidebar"] .st-key-nav_executive_summary button > div,
+        .stApp [data-testid="stSidebar"] .st-key-nav_configuration button > div {
+            justify-content: center !important;
+            align-items: center !important;
+            width: auto !important;
         }
         </style>
         """, unsafe_allow_html=True)
@@ -1778,28 +1811,21 @@ def render_executive_summary(df, slack_url, smtp_host, smtp_port, smtp_user, smt
 
     # 9. Department Summary Table
     st.markdown("### 🏢 Departmental Summary")
-    def get_top_driver(series):
-        return series.mode()[0] if not series.mode().empty else "N/A"
-
-    macro_metrics = df.groupby('Department').agg(
-        Average_Risk=('RiskPercentage', 'mean'),
-        High_Risk_Count=('RiskPercentage', lambda x: (x > 75).sum()),
-        Top_Driver=('Driver1', get_top_driver)
-    ).reset_index()
-
-    macro_metrics['Average_Risk'] = macro_metrics['Average_Risk'].round(1)
+    macro_metrics, inference_text = _build_macro_metrics(df)
+    inference_html = inference_text.replace("**", "")
 
     with st.container(border=True):
         st.dataframe(
-            macro_metrics, 
+            macro_metrics,
             column_config={
                 "Department": st.column_config.TextColumn("Business Unit"),
                 "Average_Risk": st.column_config.NumberColumn("Avg Risk Score", format="%.1f%%"),
                 "High_Risk_Count": st.column_config.NumberColumn("Critical Employees", format="%d"),
-                "Top_Driver": st.column_config.TextColumn("Leading Attrition Factor")
+                "Top_Driver": st.column_config.TextColumn("Leading Attrition Factor"),
             },
             hide_index=True,
-            use_container_width=True
+            use_container_width=True,
+            height=280,
         )
 
     # Inference Alert Card
@@ -1818,7 +1844,7 @@ def render_executive_summary(df, slack_url, smtp_host, smtp_port, smtp_user, smt
         <div style="font-size: 24px;">🤖</div>
         <div>
             <div style="color: #EF4444; font-weight: 600; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">AI Inference Alert</div>
-            <div style="color: #E2E8F0; font-size: 1rem; line-height: 1.5;">{inference_text}</div>
+            <div style="color: #E2E8F0; font-size: 1rem; line-height: 1.5;">{inference_html}</div>
         </div>
     </div>
     ''', unsafe_allow_html=True)
