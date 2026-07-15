@@ -315,7 +315,34 @@ def render_header():
         min-width: 1rem;
         position: relative;
         overflow: visible;
+        margin-left: 0 !important;
+    }
+
+    /* Sidebar-only: keep nav icon rail alignment */
+    [data-testid="stSidebar"] .st-emotion-cache-1vo6xi6 {
         margin-left: -8px !important;
+    }
+
+    /* Chat suggested prompts: equal left/right spacing */
+    div[data-testid="stColumn"]:has(.chat-scroll-anchor) .st-key-suggested_1,
+    div[data-testid="stColumn"]:has(.chat-scroll-anchor) .st-key-suggested_2,
+    div[data-testid="stColumn"]:has(.chat-scroll-anchor) .st-key-suggested_3,
+    div[data-testid="stColumn"]:has(.chat-scroll-anchor) .st-key-suggested_4 {
+        width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        box-sizing: border-box !important;
+    }
+    div[data-testid="stColumn"]:has(.chat-scroll-anchor) .st-key-suggested_1 button,
+    div[data-testid="stColumn"]:has(.chat-scroll-anchor) .st-key-suggested_2 button,
+    div[data-testid="stColumn"]:has(.chat-scroll-anchor) .st-key-suggested_3 button,
+    div[data-testid="stColumn"]:has(.chat-scroll-anchor) .st-key-suggested_4 button {
+        width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        box-sizing: border-box !important;
     }
     
     .stApp [data-testid="stSidebar"] button[kind="secondary"][data-testid="stBaseButton-secondary"],
