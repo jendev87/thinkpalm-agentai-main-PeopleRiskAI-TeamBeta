@@ -21,6 +21,7 @@ from src.automation.reporter import create_mitigation_docx, create_mitigation_pd
 from src.automation.notifier import send_manager_email
 from src.automation.slack import dispatch_critical_alert
 from src.automation.report_engine import generate_executive_pdf
+from src.analytics.explainability import ingest_and_score
 
 st.set_page_config(page_title="PeopleRisk AI", page_icon="🎯", layout="wide", initial_sidebar_state="expanded")
 
@@ -50,10 +51,19 @@ PLOTLY_CONFIG = {"displayModeBar": False, "responsive": True}
 def _cached_docx(content: str) -> bytes:
     return create_mitigation_docx(content)
 
+# Bump this when PDF engine changes so Streamlit cache drops old WeasyPrint failures.
+_PDF_ENGINE = "fpdf2-v2"
+
 @st.cache_data(show_spinner=False)
-def _cached_exec_pdf(metrics_json: str, inference_text: str) -> bytes:
-    metrics = pd.read_json(StringIO(metrics_json))
-    return generate_executive_pdf(metrics, inference_text)
+def _cached_exec_pdf(df_json: str, engine_version: str = _PDF_ENGINE) -> bytes:
+    """Cache executive PDF by roster fingerprint (JSON)."""
+    roster = pd.read_json(StringIO(df_json))
+    return generate_executive_pdf(roster)
+
+
+def _make_exec_pdf(df: pd.DataFrame) -> bytes:
+    """Generate executive PDF (cached, fpdf2 — no GTK)."""
+    return _cached_exec_pdf(df.to_json(orient="records"), _PDF_ENGINE)
 
 def _build_macro_metrics(df: pd.DataFrame):
     def get_top_driver(series):
@@ -1218,10 +1228,14 @@ def render_sidebar(col_nav):
             ''', unsafe_allow_html=True)
 
 def render_risk_overview(df):
+    if df is None or df.empty:
+        st.info("No employee records to display for this view.")
+        return
+
     kpi_col1, kpi_col2, kpi_col3 = st.columns(3)
     total_emp = len(df)
     high_risk = len(df[df['RiskPercentage'] > 75])
-    avg_risk = df['RiskPercentage'].mean()
+    avg_risk = float(pd.to_numeric(df['RiskPercentage'], errors="coerce").mean() or 0)
 
     # Column 1 Example (Total Employees)
     kpi_col1.markdown(f'''
@@ -1427,8 +1441,14 @@ def render_risk_overview(df):
 
 def render_top_drivers(df):
     st.markdown("#### **Top Attrition Drivers Distribution**")
+    if df is None or df.empty:
+        st.info("No employee records to display for this view.")
+        return
 
     drivers = pd.concat([df['Driver1'], df['Driver2'], df['Driver3']]).dropna()
+    if drivers.empty:
+        st.info("No driver data available for the current employee set.")
+        return
     driver_counts = drivers.value_counts().reset_index()
     driver_counts.columns = ['Driver', 'Count']
 
@@ -1445,8 +1465,17 @@ def render_top_drivers(df):
 
 def render_high_risk_roster(df):
     st.markdown("#### **High Risk Roster (Action Required)**")
+    if df is None or df.empty:
+        st.info("No employee records to display for this view.")
+        return
     with st.container(border=True):
         high_risk_df = df[df['RiskPercentage'] > 75].sort_values('RiskPercentage', ascending=False).head(20)
+        if high_risk_df.empty:
+            st.info("No employees above 75% flight risk in the current filtered set.")
+            return
+        # Header ~38px + ~35px per row; cap for long lists so the page stays scrollable
+        n_rows = len(high_risk_df)
+        table_height = min(38 + n_rows * 35, 400)
         st.dataframe(
             high_risk_df[['EmployeeID', 'Department', 'Role', 'RiskPercentage', 'Driver1', 'MonthlyHours']],
             column_config={
@@ -1454,7 +1483,7 @@ def render_high_risk_roster(df):
                 "RiskPercentage": st.column_config.ProgressColumn(
                     "Flight Risk",
                     help="Predicted probability of attrition",
-                    format="%f%%",
+                    format="%.1f%%",
                     min_value=0,
                     max_value=100,
                 ),
@@ -1465,11 +1494,142 @@ def render_high_risk_roster(df):
             },
             hide_index=True,
             use_container_width=True,
-            height=400
+            height=table_height,
         )
+
+
+def search_employees(df: pd.DataFrame, query: str) -> pd.DataFrame:
+    """
+    Filter the roster by free-text search across ID, dept, role, drivers, and risk cues.
+    Text + risk filters are combined with AND when both are present.
+    """
+    import re
+
+    q = (query or "").strip()
+    if not q or df.empty:
+        return df.iloc[0:0].copy()
+
+    work = df.copy()
+    if "RiskPercentage" in work.columns:
+        work["RiskPercentage"] = pd.to_numeric(work["RiskPercentage"], errors="coerce")
+
+    q_lower = q.lower()
+    risk_mask = pd.Series(False, index=work.index)
+    text_mask = pd.Series(False, index=work.index)
+    has_risk_filter = False
+    has_text_filter = False
+
+    if any(tok in q_lower for tok in ("high risk", "high-risk", "flight risk")):
+        risk_mask |= work["RiskPercentage"] > 75
+        has_risk_filter = True
+    if "critical" in q_lower:
+        risk_mask |= work["RiskPercentage"] > 80
+        has_risk_filter = True
+    if "low risk" in q_lower or "low-risk" in q_lower:
+        risk_mask |= work["RiskPercentage"] <= 25
+        has_risk_filter = True
+
+    for m in re.finditer(r"(>=|<=|>|<)\s*(\d+(?:\.\d+)?)", q_lower):
+        op, val = m.group(1), float(m.group(2))
+        col = work["RiskPercentage"]
+        if op == ">":
+            risk_mask |= col > val
+        elif op == ">=":
+            risk_mask |= col >= val
+        elif op == "<":
+            risk_mask |= col < val
+        elif op == "<=":
+            risk_mask |= col <= val
+        has_risk_filter = True
+
+    if "EmployeeID" in work.columns:
+        emp_ids_lower = work["EmployeeID"].astype(str).str.lower()
+        for emp_tok in re.findall(r"emp\d+", q_lower):
+            text_mask |= emp_ids_lower == emp_tok
+            has_text_filter = True
+
+    text_cols = [
+        c
+        for c in ("EmployeeID", "Department", "Role", "Driver1", "Driver2", "Driver3")
+        if c in work.columns
+    ]
+    if text_cols:
+        haystack = work[text_cols].astype(str).agg(" ".join, axis=1).str.lower()
+        tokens = [
+            t
+            for t in re.split(r"\s+", q_lower)
+            if t
+            and t not in {"high", "risk", "low", "critical", "flight", ">", "<", ">=", "<="}
+            and not re.fullmatch(r"[><]=?\d+(?:\.\d+)?", t)
+            and not re.fullmatch(r"emp\d+", t)
+        ]
+        if tokens:
+            token_mask = pd.Series(True, index=work.index)
+            for tok in tokens:
+                token_mask &= haystack.str.contains(re.escape(tok), na=False)
+            text_mask |= token_mask
+            has_text_filter = True
+        elif not has_text_filter and not has_risk_filter:
+            text_mask |= haystack.str.contains(re.escape(q_lower), na=False)
+            has_text_filter = True
+
+    if has_risk_filter and has_text_filter:
+        mask = risk_mask & text_mask
+    elif has_risk_filter:
+        mask = risk_mask
+    else:
+        mask = text_mask
+
+    result = work.loc[mask].copy()
+    if "RiskPercentage" in result.columns and not result.empty:
+        result = result.sort_values("RiskPercentage", ascending=False)
+    return result
+
+
+def _clear_dashboard_search() -> None:
+    """Reset search widget state (runs via button on_click before next render)."""
+    st.session_state.dash_search = ""
+    st.session_state.pop("_dash_search_active", None)
+
+
+def apply_dashboard_search(df: pd.DataFrame, query: str) -> pd.DataFrame:
+    """Return full roster when search is empty; otherwise matched employees."""
+    q = (query or "").strip()
+    if not q:
+        return df
+    return search_employees(df, q)
+
+
+def render_search_filter_banner(query: str, match_count: int, total_count: int) -> None:
+    """Show active search scope across analytics tabs."""
+    left, right = st.columns([5, 1])
+    with left:
+        st.markdown(
+            f"""
+            <div style="background: rgba(124, 58, 237, 0.12); border: 1px solid rgba(167, 139, 250, 0.35);
+                        border-radius: 10px; padding: 10px 14px; margin-bottom: 12px;">
+                <span style="color:#A78BFA; font-weight:600;">🔍 Search active:</span>
+                <span style="color:#E2E8F0;"> “{query}”</span>
+                <span style="color:#94A3B8;"> — showing {match_count} of {total_count} employees across this analytics view</span>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with right:
+        st.button(
+            "Clear",
+            key="clear_dash_search",
+            use_container_width=True,
+            on_click=_clear_dashboard_search,
+            help="Reset to the full employee dashboard",
+        )
+
 
 def render_executive_summary(df, slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, target_email):
     import plotly.graph_objects as go
+    if df is None or df.empty:
+        st.info("No employee records to display for this view.")
+        return
     st.markdown("## 📊 Boardroom Briefing: Attrition Risk Assessment")
     st.markdown("<p style='color: #94A3B8; font-size: 1.05rem; margin-bottom: 24px;'>Executive overview of predicted flight risks, business impact, and AI-recommended interventions.</p>", unsafe_allow_html=True)
 
@@ -1827,14 +1987,9 @@ def render_executive_summary(df, slack_url, smtp_host, smtp_port, smtp_user, smt
     st.markdown("<div style='border-top: 1px solid #334155; margin-bottom: 24px;'></div>", unsafe_allow_html=True)
     rdc1, rdc2, rdc3, rdc4 = st.columns(4)
 
-    # PDF Export
-    metrics_json = macro_metrics.to_json(orient="records")
+    # PDF Export (fpdf2 — no WeasyPrint/GTK)
     try:
-        # Try main or fallback PDF generator
-        if '_cached_exec_pdf' in globals():
-            pdf_bytes = _cached_exec_pdf(metrics_json, inference_text)
-        else:
-            pdf_bytes = generate_executive_pdf(df)
+        pdf_bytes = _make_exec_pdf(df)
         can_export = True
         pdf_err = ""
     except Exception as e:
@@ -1865,10 +2020,12 @@ def render_executive_summary(df, slack_url, smtp_host, smtp_port, smtp_user, smt
             st.button("📧 Email HR Contact", use_container_width=True, key="rdc_email_disabled", disabled=True, help="⚠️ Target Email is missing. Open the Configuration tab (⚙️) to set your recipient email.")
         else:
             if st.button("📧 Email HR Contact", use_container_width=True, key="rdc_email"):
-                if '_cached_exec_pdf' in globals():
-                    pdf_bytes_to_send = _cached_exec_pdf(metrics_json, inference_text)
-                else:
-                    pdf_bytes_to_send = pdf_bytes
+                pdf_bytes_to_send = pdf_bytes
+                if pdf_bytes_to_send is None:
+                    try:
+                        pdf_bytes_to_send = _make_exec_pdf(df)
+                    except Exception:
+                        pdf_bytes_to_send = None
                 if pdf_bytes_to_send:
                     success = send_manager_email(
                         target_email=target_email,
@@ -1951,21 +2108,26 @@ def render_configuration(slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, 
 
 def render_dashboard(col_dash, df, slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, target_email):
     with col_dash:
+        # Honor pending clear BEFORE reading/creating the search widget
+        if st.session_state.pop("_clear_dash_search", False):
+            st.session_state.dash_search = ""
+
+        search_query = (st.session_state.get("dash_search") or "").strip()
+        view_df = apply_dashboard_search(df, search_query)
+
         with st.container(border=False):
                 st.markdown('<div style="padding-right: 20px;">', unsafe_allow_html=True)
                 st.markdown("## **Organizational Risk Dashboard**")
                 st.markdown("<p style='color: #94A3B8; font-size: 0.9rem; margin-bottom: 24px;'>Real-time insights and predictive flight risk metrics.</p>", unsafe_allow_html=True)
                 
                 # Toolbar
-                tb_col1, tb_col2, tb_col3, tb_col4 = st.columns([4, 1.2, 1.8, 1.2], gap="small")
+                tb_col1, tb_col2, tb_col3 = st.columns([4, 1.8, 1.2], gap="small")
                 with tb_col1:
                     st.text_input("Search...", label_visibility="collapsed", placeholder="🔍 Search employee database...", key="dash_search")
                 with tb_col2:
-                    st.button("🎛 Filters", use_container_width=True)
-                with tb_col3:
                     with st.popover("📥 Ingest Roster Data", use_container_width=True):
                         st.markdown("### **Upload Fresh HR Records**")
-                        st.markdown("<p style='color: #64748B; font-size: 0.85rem;'>Select a CSV or Excel file to update the platform core analytics database schema.</p>", unsafe_allow_html=True)
+                        st.markdown("<p style='color: #64748B; font-size: 0.85rem;'>Upload a CSV/Excel roster. The platform will ingest employees and recompute RiskPercentage + SHAP drivers with the live XGBoost model.</p>", unsafe_allow_html=True)
                         uploaded_file = st.file_uploader("Choose file", type=["csv", "xlsx"], label_visibility="collapsed")
                         
                         if uploaded_file is not None:
@@ -1976,59 +2138,56 @@ def render_dashboard(col_dash, df, slack_url, smtp_host, smtp_port, smtp_user, s
                                         new_df = pd.read_csv(uploaded_file)
                                     else:
                                         new_df = pd.read_excel(uploaded_file)
-                                    
-                                    with st.spinner("Syncing to core database..."):
+
+                                    with st.spinner("Ingesting roster and running live XGBoost + SHAP scoring..."):
                                         project_root = Path(__file__).parent.parent.parent
-                                        db_path = project_root / 'hr_data.db'
-                                        with sqlite3.connect(db_path) as conn:
-                                            core_cols = ['EmployeeID', 'Tenure', 'Department', 'Role', 'MonthlyHours', 'LastPromotion', 'Salary', 'Attrition']
-                                            emp_df = new_df[[c for c in core_cols if c in new_df.columns]]
-                                            emp_df.to_sql('employees', conn, if_exists='replace', index=False)
-                                            
-                                            ml_cols = ['EmployeeID', 'RiskPercentage', 'Driver1', 'Driver2', 'Driver3']
-                                            if 'RiskPercentage' in new_df.columns:
-                                                ml_df = new_df[[c for c in ml_cols if c in new_df.columns]]
-                                                ml_df.to_sql('attrition_scores', conn, if_exists='replace', index=False)
-                                        
-                                        # Clear only data cache (not all caches)
-                                        load_risk_data.clear()
-                                        _chart_aggregates.clear()
-                                        _cached_exec_pdf.clear()
-                                        
-                                    st.session_state.last_uploaded = file_key
-                                    st.session_state.pop("_dash_pdf_bytes", None)
-                                    st.session_state.pop("_exec_pdf_bytes", None)
-                                    st.success("Database synced successfully! 🚀")
+                                        db_path = project_root / "hr_data.db"
+                                        try:
+                                            scores = ingest_and_score(new_df, db_path=db_path)
+                                            st.cache_data.clear()
+                                            st.session_state.last_uploaded = file_key
+                                            st.success(
+                                                f"Synced {len(new_df)} employees and scored {len(scores)} with live model + SHAP."
+                                            )
+                                        except Exception as e:
+                                            st.error(f"Failed to ingest/score data: {e}")
                                     st.rerun()
                                 except Exception as e:
-                                    st.error(f"Failed to ingest data: {e}")
+                                    st.error(f"Failed to ingest/score data: {e}")
                             else:
                                 st.success("Database synced successfully! 🚀")
                 
-                with tb_col4:
-                    @st.cache_data(show_spinner=False)
-                    def get_cached_pdf(current_df):
-                        try:
-                            metrics, inf_text = _build_macro_metrics(current_df)
-                            return _cached_exec_pdf(metrics.to_json(orient="records"), inf_text)
-                        except Exception as e:
-                            raise RuntimeError(f"Failed to generate PDF: {e}")
-
+                with tb_col3:
                     export_error = None
                     pdf_bytes = None
+                    # Export reflects current dashboard filter (full roster when search is empty)
+                    export_df = view_df if not view_df.empty else df
+                    export_name = (
+                        "dashboard_export_filtered.pdf"
+                        if search_query and not view_df.empty
+                        else "dashboard_export.pdf"
+                    )
                     try:
-                        pdf_bytes = get_cached_pdf(df)
+                        if search_query and view_df.empty:
+                            export_error = "No employees match the current search — clear search or adjust the keyword to export."
+                        else:
+                            pdf_bytes = _make_exec_pdf(export_df)
                     except Exception as e:
-                        export_error = str(e)
+                        export_error = f"Failed to generate PDF: {e}"
 
                     if pdf_bytes:
                         st.download_button(
                             "📤 Export",
                             data=pdf_bytes,
-                            file_name="dashboard_export.pdf",
+                            file_name=export_name,
                             mime="application/pdf",
                             use_container_width=True,
                             key="tb_export",
+                            help=(
+                                f"Exports the current filtered view ({len(export_df)} employees)"
+                                if search_query
+                                else f"Exports the full dashboard ({len(export_df)} employees)"
+                            ),
                         )
                     elif export_error:
                         st.button(
@@ -2036,7 +2195,7 @@ def render_dashboard(col_dash, df, slack_url, smtp_host, smtp_port, smtp_user, s
                             use_container_width=True,
                             disabled=True,
                             key="tb_export_disabled",
-                            help=f"PDF export unavailable: {export_error}",
+                            help=export_error,
                         )
                 
                 st.markdown("<div style='margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.05);'></div>", unsafe_allow_html=True)
@@ -2044,16 +2203,32 @@ def render_dashboard(col_dash, df, slack_url, smtp_host, smtp_port, smtp_user, s
                 if "active_navigation" not in st.session_state:
                     st.session_state.active_navigation = "📊 Risk Overview"
 
-        if st.session_state.active_navigation == "📊 Risk Overview":
-            render_risk_overview(df)
-        elif st.session_state.active_navigation == "🎯 Top Drivers":
-            render_top_drivers(df)
-        elif st.session_state.active_navigation == "📋 High Risk Roster":
-            render_high_risk_roster(df)
-        elif st.session_state.active_navigation == "⚙️ Executive Summary":
-            render_executive_summary(df, slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, target_email)
-        elif st.session_state.active_navigation == "⚙️ Configuration":
+        nav = st.session_state.get("active_navigation", "📊 Risk Overview")
+
+        # Configuration is global settings — do not apply employee search filter there
+        if nav == "⚙️ Configuration":
             render_configuration(slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, target_email)
+            return
+
+        if search_query:
+            render_search_filter_banner(search_query, len(view_df), len(df))
+            if view_df.empty:
+                st.warning(
+                    "No employees matched that search. Try an ID, department, role, "
+                    "`high risk`, or `>75` — or clear the search."
+                )
+                return
+
+        if nav == "📊 Risk Overview":
+            render_risk_overview(view_df)
+        elif nav == "🎯 Top Drivers":
+            render_top_drivers(view_df)
+        elif nav == "📋 High Risk Roster":
+            render_high_risk_roster(view_df)
+        elif nav == "⚙️ Executive Summary":
+            render_executive_summary(
+                view_df, slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, target_email
+            )
 
 def render_chat_panel(col_chat, df, slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, target_email):
     with col_chat:
@@ -2660,7 +2835,12 @@ def main():
     # Extract config variables to pass down (using 'or' so empty session state properly falls back to env vars)
     slack_url = st.session_state.get("saved_slack") or os.environ.get("SLACK_WEBHOOK_URL", "")
     smtp_host = st.session_state.get("saved_smtp_host") or os.environ.get("SMTP_HOST", "")
-    smtp_port = int(st.session_state.get("saved_smtp_port") or os.environ.get("SMTP_PORT", 587))
+    # SMTP_PORT may be "" in .env (key present but empty) — treat blank/invalid as 587
+    _raw_port = st.session_state.get("saved_smtp_port") or os.environ.get("SMTP_PORT") or 587
+    try:
+        smtp_port = int(_raw_port)
+    except (TypeError, ValueError):
+        smtp_port = 587
     smtp_user = st.session_state.get("saved_smtp_user") or os.environ.get("SMTP_USER", "")
     smtp_pass = st.session_state.get("saved_smtp_pass") or os.environ.get("SMTP_PASS", "")
     target_email = st.session_state.get("saved_target_email") or os.environ.get("TARGET_EMAIL", "")
