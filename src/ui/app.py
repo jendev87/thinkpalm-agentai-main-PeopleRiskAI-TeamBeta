@@ -1681,46 +1681,27 @@ def render_executive_summary(df, slack_url, smtp_host, smtp_port, smtp_user, smt
 
     # 3. Priority Action Center
     st.markdown("### ⚡ Priority Action Center")
-    pac1, pac2, pac3 = st.columns(3)
-    with pac1:
-        st.markdown("""<div style='background: #1E293B; border: 1px solid #334155; padding: 20px; border-radius: 8px; border-top: 4px solid #EF4444; margin-bottom: 16px;'>
-            <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;'>
-                <span style='font-size: 20px;'>💰</span>
-                <span style='background: rgba(239, 68, 68, 0.15); color: #FCA5A5; font-size: 0.75rem; padding: 4px 8px; border-radius: 12px; font-weight: 600;'>Critical</span>
-            </div>
-            <h4 style='color: #F8FAFC; margin: 0 0 8px 0; font-size: 1.1rem;'>Salary Review</h4>
-            <p style='color: #94A3B8; font-size: 0.9rem; margin-bottom: 16px;'>18 top-performers currently sit below the 50th percentile of their compensation band.</p>
-            <span class="pac-btn" style="display:none;"></span>
-        </div>""", unsafe_allow_html=True)
-        if st.button("✨ Ask AI\nView affected employees", key="pac_btn_1", use_container_width=True):
-            st.session_state.pending_query = "Show me the top-performing employees whose salary is below the 50th percentile."
-            st.session_state.ai_action_triggered = True
-    with pac2:
-        st.markdown("""<div style='background: #1E293B; border: 1px solid #334155; padding: 20px; border-radius: 8px; border-top: 4px solid #F59E0B; margin-bottom: 16px;'>
-            <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;'>
-                <span style='font-size: 20px;'>📈</span>
-                <span style='background: rgba(245, 158, 11, 0.15); color: #FCD34D; font-size: 0.75rem; padding: 4px 8px; border-radius: 12px; font-weight: 600;'>High</span>
-            </div>
-            <h4 style='color: #F8FAFC; margin: 0 0 8px 0; font-size: 1.1rem;'>Promotion Review</h4>
-            <p style='color: #94A3B8; font-size: 0.9rem; margin-bottom: 16px;'>12 critical engineers have surpassed 24 months without a title advancement.</p>
-            <span class="pac-btn" style="display:none;"></span>
-        </div>""", unsafe_allow_html=True)
-        if st.button("✨ Ask AI\nReview candidates", key="pac_btn_2", use_container_width=True):
-            st.session_state.pending_query = "List the critical engineers who have surpassed 24 months without a promotion."
-            st.session_state.ai_action_triggered = True
-    with pac3:
-        st.markdown("""<div style='background: #1E293B; border: 1px solid #334155; padding: 20px; border-radius: 8px; border-top: 4px solid #3B82F6; margin-bottom: 16px;'>
-            <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;'>
-                <span style='font-size: 20px;'>🤝</span>
-                <span style='background: rgba(59, 130, 246, 0.15); color: #93C5FD; font-size: 0.75rem; padding: 4px 8px; border-radius: 12px; font-weight: 600;'>Moderate</span>
-            </div>
-            <h4 style='color: #F8FAFC; margin: 0 0 8px 0; font-size: 1.1rem;'>Manager Intervention</h4>
-            <p style='color: #94A3B8; font-size: 0.9rem; margin-bottom: 16px;'>Operations unit shows widespread burnout indicators. Schedule 1:1 check-ins.</p>
-            <span class="pac-btn" style="display:none;"></span>
-        </div>""", unsafe_allow_html=True)
-        if st.button("✨ Ask AI\nAlert managers", key="pac_btn_3", use_container_width=True):
-            st.session_state.pending_query = "Draft an alert to Operations managers to schedule 1:1 check-ins addressing burnout."
-            st.session_state.ai_action_triggered = True
+    pac_cols = st.columns(3)
+    
+    from src.automation.report_engine import generate_hr_recommendations
+    recs = generate_hr_recommendations(df)
+    
+    for i, col in enumerate(pac_cols):
+        if i < len(recs):
+            rec = recs[i]
+            with col:
+                st.markdown(f"""<div style='background: #1E293B; border: 1px solid #334155; padding: 20px; border-radius: 8px; border-top: 4px solid {rec['color']}; margin-bottom: 16px;'>
+                    <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;'>
+                        <span style='font-size: 20px;'>{rec['icon']}</span>
+                        <span style='background: {rec['bg_color']}; color: {rec['text_color']}; font-size: 0.75rem; padding: 4px 8px; border-radius: 12px; font-weight: 600;'>{rec['tag']}</span>
+                    </div>
+                    <h4 style='color: #F8FAFC; margin: 0 0 8px 0; font-size: 1.1rem;'>{rec['short_title']}</h4>
+                    <p style='color: #94A3B8; font-size: 0.9rem; margin-bottom: 16px;'>{rec['description']}</p>
+                    <span class="pac-btn" style="display:none;"></span>
+                </div>""", unsafe_allow_html=True)
+                if st.button(f"✨ Ask AI\nExplore {rec['short_title']}", key=f"pac_btn_{i}", use_container_width=True):
+                    st.session_state.pending_query = rec['query']
+                    st.session_state.ai_action_triggered = True
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -1827,31 +1808,21 @@ def render_executive_summary(df, slack_url, smtp_host, smtp_port, smtp_user, smt
 
     # 8. Generated Recommendations
     st.markdown("### 📋 AI-Generated HR Recommendations")
-    st.markdown("""
-    <div style="background: #1E293B; border: 1px solid #334155; border-radius: 8px; margin-bottom: 24px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid #334155;">
-            <div>
-                <h5 style="color: #F8FAFC; margin: 0 0 4px 0; font-size: 1rem;">Mid-Cycle Salary Calibration for Core Engineers</h5>
-                <p style="color: #94A3B8; margin: 0; font-size: 0.85rem;">Affected: 14 Employees | Est. Cost: $115k | Retention Prob: +42%</p>
-            </div>
-            <div style="background: rgba(16, 185, 129, 0.15); color: #10B981; padding: 4px 10px; border-radius: 4px; font-weight: 600; font-size: 0.85rem;">92% Confidence</div>
-        </div>
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid #334155;">
-            <div>
-                <h5 style="color: #F8FAFC; margin: 0 0 4px 0; font-size: 1rem;">Operations Manager Rotation Program</h5>
-                <p style="color: #94A3B8; margin: 0; font-size: 0.85rem;">Affected: 8 Employees | Est. Cost: $0 | Retention Prob: +28%</p>
-            </div>
-            <div style="background: rgba(16, 185, 129, 0.15); color: #10B981; padding: 4px 10px; border-radius: 4px; font-weight: 600; font-size: 0.85rem;">88% Confidence</div>
-        </div>
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px;">
-            <div>
-                <h5 style="color: #F8FAFC; margin: 0 0 4px 0; font-size: 1rem;">Accelerated Promo Track for Junior Sales</h5>
-                <p style="color: #94A3B8; margin: 0; font-size: 0.85rem;">Affected: 5 Employees | Est. Cost: $40k | Retention Prob: +55%</p>
-            </div>
-            <div style="background: rgba(245, 158, 11, 0.15); color: #F59E0B; padding: 4px 10px; border-radius: 4px; font-weight: 600; font-size: 0.85rem;">74% Confidence</div>
-        </div>
+    
+    html_recs = ""
+    for idx, rec in enumerate(recs):
+        border_style = "border-bottom: 1px solid #334155;" if idx < len(recs) - 1 else ""
+        html_recs += f"""<div style="display: flex; justify-content: space-between; align-items: center; padding: 16px; {border_style}">
+    <div>
+        <h5 style="color: #F8FAFC; margin: 0 0 4px 0; font-size: 1rem;">{rec['title']}</h5>
+        <p style="color: #94A3B8; margin: 0; font-size: 0.85rem;">Affected: {rec['affected']} Employees | Est. Cost: ${rec['cost']:,.0f} | Retention Prob: {rec['retention_prob']}</p>
     </div>
-    """, unsafe_allow_html=True)
+    <div style="background: rgba(16, 185, 129, 0.15); color: #10B981; padding: 4px 10px; border-radius: 4px; font-weight: 600; font-size: 0.85rem;">{rec['confidence']} Confidence</div>
+</div>"""
+        
+    st.markdown(f"""<div style="background: #1E293B; border: 1px solid #334155; border-radius: 8px; margin-bottom: 24px;">
+{html_recs}
+</div>""", unsafe_allow_html=True)
     if st.session_state.get('generating_exec_plan'):
         st.markdown("""
         <div style="background: #111827; border: 1px solid rgba(139, 92, 246, 0.4); padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); margin-bottom: 16px;">

@@ -1,0 +1,28 @@
+Traceback (most recent call last):
+  File "/Users/thinkpalm/Desktop/Training/Main Project/PeopleRiskAI/.venv/lib/python3.9/site-packages/streamlit/runtime/state/session_state.py", line 469, in __getitem__
+    return self._getitem(widget_id, key)
+  File "/Users/thinkpalm/Desktop/Training/Main Project/PeopleRiskAI/.venv/lib/python3.9/site-packages/streamlit/runtime/state/session_state.py", line 517, in _getitem
+    raise KeyError
+KeyError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/thinkpalm/Desktop/Training/Main Project/PeopleRiskAI/.venv/lib/python3.9/site-packages/streamlit/runtime/state/session_state_proxy.py", line 130, in __getattr__
+    return self[key]
+  File "/Users/thinkpalm/Desktop/Training/Main Project/PeopleRiskAI/.venv/lib/python3.9/site-packages/streamlit/runtime/state/session_state_proxy.py", line 101, in __getitem__
+    return get_session_state()[key]
+  File "/Users/thinkpalm/Desktop/Training/Main Project/PeopleRiskAI/.venv/lib/python3.9/site-packages/streamlit/runtime/state/safe_session_state.py", line 104, in __getitem__
+    return self._state[key]
+  File "/Users/thinkpalm/Desktop/Training/Main Project/PeopleRiskAI/.venv/lib/python3.9/site-packages/streamlit/runtime/state/session_state.py", line 471, in __getitem__
+    raise KeyError(_missing_key_error_message(key))
+KeyError: 'st.session_state has no key "df". Did you forget to initialize it? More info: https://docs.streamlit.io/develop/concepts/architecture/session-state#initialization'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/thinkpalm/Desktop/Training/Main Project/PeopleRiskAI/src/ui/app.py", line 1781, in render_chat_input
+    docx_bytes = create_executive_action_plan_docx(st.session_state.df)
+  File "/Users/thinkpalm/Desktop/Training/Main Project/PeopleRiskAI/.venv/lib/python3.9/site-packages/streamlit/runtime/state/session_state_proxy.py", line 132, in __getattr__
+    raise AttributeError(_missing_attr_error_message(key))
+AttributeError: st.session_state has no attribute "df". Did you forget to initialize it? More info: https://docs.streamlit.io/develop/concepts/architecture/session-state#initialization
