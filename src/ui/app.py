@@ -26,10 +26,193 @@ from src.analytics.explainability import ingest_and_score
 st.set_page_config(page_title="PeopleRisk AI", page_icon="🎯", layout="wide", initial_sidebar_state="expanded")
 
 import uuid
+
+def init_chat_db():
+    project_root = Path(__file__).parent.parent.parent
+    db_path = project_root / 'hr_data.db'
+    with sqlite3.connect(db_path) as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS chat_threads (
+                thread_id TEXT PRIMARY KEY,
+                title TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS chat_messages (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                thread_id TEXT,
+                role TEXT,
+                content TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (thread_id) REFERENCES chat_threads(thread_id) ON DELETE CASCADE
+            )
+        """)
+        
+        # Verify and add any missing columns in chat_messages
+        cursor.execute("PRAGMA table_info(chat_messages)")
+        existing_cols = {col[1] for col in cursor.fetchall()}
+        
+        required_cols = {
+            "intent": "TEXT",
+            "html_after": "TEXT",
+            "attachment_bytes": "BLOB",
+            "attachment_name": "TEXT",
+            "attachment_size": "TEXT",
+            "hide_default_buttons": "INTEGER",
+            "options": "TEXT",
+            "original_prompt": "TEXT"
+        }
+        
+        for col_name, col_type in required_cols.items():
+            if col_name not in existing_cols:
+                cursor.execute(f"ALTER TABLE chat_messages ADD COLUMN {col_name} {col_type}")
+                
+        conn.commit()
+
+def load_chat_threads():
+    project_root = Path(__file__).parent.parent.parent
+    db_path = project_root / 'hr_data.db'
+    threads = {}
+    with sqlite3.connect(db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM chat_threads ORDER BY updated_at DESC")
+        thread_rows = cursor.fetchall()
+        for t_row in thread_rows:
+            thread_id = t_row["thread_id"]
+            cursor.execute("SELECT * FROM chat_messages WHERE thread_id = ? ORDER BY id ASC", (thread_id,))
+            msg_rows = cursor.fetchall()
+            messages = []
+            for m_row in msg_rows:
+                cols = m_row.keys()
+                msg = {
+                    "role": m_row["role"] if "role" in cols else None,
+                    "content": m_row["content"] if "content" in cols else None,
+                }
+                if "intent" in cols and m_row["intent"]:
+                    msg["intent"] = m_row["intent"]
+                if "html_after" in cols and m_row["html_after"]:
+                    msg["html_after"] = m_row["html_after"]
+                if "attachment_bytes" in cols and m_row["attachment_bytes"]:
+                    msg["attachment_bytes"] = m_row["attachment_bytes"]
+                if "attachment_name" in cols and m_row["attachment_name"]:
+                    msg["attachment_name"] = m_row["attachment_name"]
+                if "attachment_size" in cols and m_row["attachment_size"]:
+                    msg["attachment_size"] = m_row["attachment_size"]
+                if "hide_default_buttons" in cols and m_row["hide_default_buttons"] is not None:
+                    msg["hide_default_buttons"] = bool(m_row["hide_default_buttons"])
+                if "options" in cols and m_row["options"]:
+                    try:
+                        msg["options"] = json.loads(m_row["options"])
+                    except Exception:
+                        pass
+                if "original_prompt" in cols and m_row["original_prompt"]:
+                    msg["original_prompt"] = m_row["original_prompt"]
+                messages.append(msg)
+            threads[thread_id] = messages
+    return threads
+
+def save_chat_thread(thread_id, title):
+    project_root = Path(__file__).parent.parent.parent
+    db_path = project_root / 'hr_data.db'
+    with sqlite3.connect(db_path) as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO chat_threads (thread_id, title)
+            VALUES (?, ?)
+            ON CONFLICT(thread_id) DO UPDATE SET
+                title = excluded.title,
+                updated_at = CURRENT_TIMESTAMP
+        """, (thread_id, title))
+        conn.commit()
+
+def save_chat_message(thread_id, msg):
+    project_root = Path(__file__).parent.parent.parent
+    db_path = project_root / 'hr_data.db'
+    with sqlite3.connect(db_path) as conn:
+        cursor = conn.cursor()
+        
+        # Detect existing columns in table
+        cursor.execute("PRAGMA table_info(chat_messages)")
+        cols = {col[1] for col in cursor.fetchall()}
+        
+        # Prepare fields dynamically
+        fields = {
+            "thread_id": thread_id,
+            "role": msg.get("role"),
+            "content": msg.get("content")
+        }
+        
+        # Add optional fields if they are in columns
+        optional_fields = {
+            "intent": msg.get("intent"),
+            "html_after": msg.get("html_after"),
+            "attachment_bytes": msg.get("attachment_bytes"),
+            "attachment_name": msg.get("attachment_name"),
+            "attachment_size": msg.get("attachment_size"),
+            "hide_default_buttons": 1 if msg.get("hide_default_buttons") else 0 if "hide_default_buttons" in msg else None,
+            "options": json.dumps(msg.get("options")) if msg.get("options") is not None else None,
+            "original_prompt": msg.get("original_prompt")
+        }
+        for field_name, val in optional_fields.items():
+            if field_name in cols:
+                fields[field_name] = val
+                
+        # If 'seq' is a column, we must calculate and provide it to prevent NOT NULL constraint errors
+        if "seq" in cols:
+            cursor.execute("SELECT COUNT(*) FROM chat_messages WHERE thread_id = ?", (thread_id,))
+            seq_val = cursor.fetchone()[0]
+            fields["seq"] = seq_val
+            
+        # If 'created_at' is a column, we must provide a default value (like ISO timestamp) if it is NOT NULL
+        if "created_at" in cols:
+            import datetime
+            fields["created_at"] = datetime.datetime.utcnow().isoformat()
+            
+        # Build the dynamic SQL insert statement
+        columns_str = ", ".join(fields.keys())
+        placeholders_str = ", ".join(["?"] * len(fields))
+        values = tuple(fields.values())
+        
+        sql = f"INSERT INTO chat_messages ({columns_str}) VALUES ({placeholders_str})"
+        cursor.execute(sql, values)
+        
+        # Update thread's updated_at timestamp
+        cursor.execute("""
+            UPDATE chat_threads 
+            SET updated_at = CURRENT_TIMESTAMP 
+            WHERE thread_id = ?
+        """, (thread_id,))
+        
+        conn.commit()
+
+def delete_chat_thread(thread_id):
+    project_root = Path(__file__).parent.parent.parent
+    db_path = project_root / 'hr_data.db'
+    with sqlite3.connect(db_path) as conn:
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM chat_messages WHERE thread_id = ?", (thread_id,))
+        cursor.execute("DELETE FROM chat_threads WHERE thread_id = ?", (thread_id,))
+        conn.commit()
+
+def append_and_save_message(thread_id, msg):
+    if thread_id not in st.session_state.threads:
+        st.session_state.threads[thread_id] = []
+    st.session_state.threads[thread_id].append(msg)
+    save_chat_message(thread_id, msg)
+
+init_chat_db()
+
 if "threads" not in st.session_state:
-    st.session_state.threads = {}
+    st.session_state.threads = load_chat_threads()
 if "active_thread_id" not in st.session_state:
-    st.session_state.active_thread_id = None
+    if st.session_state.threads:
+        st.session_state.active_thread_id = list(st.session_state.threads.keys())[0]
+    else:
+        st.session_state.active_thread_id = None
 if "pending_query" not in st.session_state:
     st.session_state.pending_query = None
 if "sidebar_collapsed" not in st.session_state:
@@ -2203,11 +2386,129 @@ def render_dashboard(col_dash, df, slack_url, smtp_host, smtp_port, smtp_user, s
 
 def render_chat_panel(col_chat, df, slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, target_email):
     with col_chat:
-        # Render Header and Tabs
-        has_recent = "threads" in st.session_state and len(st.session_state.threads) > 1
-        recent_style = "color: #94A3B8; cursor: pointer;" if has_recent else "color: #475569; cursor: not-allowed; opacity: 0.5;"
-        recent_title_attr = "" if has_recent else 'title="No recent conversations..."'
+        # Initialize active_chat_tab
+        if "active_chat_tab" not in st.session_state:
+            st.session_state.active_chat_tab = "Chat"
 
+        # Inject CSS styles
+        st.markdown("""
+        <style>
+        /* Chat Tab Buttons styling */
+        div.stButton > button[key="chat_tab_btn"],
+        div.stButton > button[key="recent_chats_tab_btn"] {
+            background: transparent !important;
+            border: none !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            font-weight: 600 !important;
+            font-size: 0.9rem !important;
+            padding: 8px 12px !important;
+            width: 100% !important;
+            text-align: center !important;
+            margin: 0 !important;
+            height: auto !important;
+            min-height: 0 !important;
+            transition: all 0.2s ease !important;
+        }
+        /* New chat button */
+        div.stButton > button[key="new_chat_btn"] {
+            background: rgba(124, 58, 237, 0.1) !important;
+            border: 1px solid rgba(124, 58, 237, 0.2) !important;
+            color: #A78BFA !important;
+            border-radius: 12px !important;
+            padding: 8px 12px !important;
+            margin-bottom: 16px !important;
+            font-weight: 600 !important;
+            width: 100% !important;
+            box-shadow: none !important;
+        }
+        div.stButton > button[key="new_chat_btn"]:hover {
+            background: rgba(124, 58, 237, 0.2) !important;
+            border-color: rgba(124, 58, 237, 0.4) !important;
+            color: #FFFFFF !important;
+        }
+        /* Recent Chat Item Buttons */
+        div.stButton > button[key^="recent_item_"] {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            padding: 12px 16px !important;
+            border-radius: 12px !important;
+            background: rgba(255, 255, 255, 0.03) !important;
+            border: 1px solid rgba(255, 255, 255, 0.05) !important;
+            color: #E2E8F0 !important;
+            font-size: 0.85rem !important;
+            margin-bottom: 8px !important;
+            width: 100% !important;
+            text-align: left !important;
+            height: auto !important;
+            min-height: 0 !important;
+            transition: all 0.2s ease !important;
+            box-shadow: none !important;
+        }
+        div.stButton > button[key^="recent_item_"]:hover {
+            background: rgba(255, 255, 255, 0.05) !important;
+            color: #FFFFFF !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+            transform: translateY(-1px) !important;
+        }
+        div.stButton > button[key^="recent_item_"] p {
+            margin: 0 !important;
+            width: 100% !important;
+            text-align: left !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+        /* Delete buttons */
+        div.stButton > button[key^="delete_item_"] {
+            background: rgba(239, 68, 68, 0.05) !important;
+            border: 1px solid rgba(239, 68, 68, 0.1) !important;
+            color: #EF4444 !important;
+            border-radius: 12px !important;
+            padding: 12px 0 !important;
+            margin-bottom: 8px !important;
+            width: 100% !important;
+            text-align: center !important;
+            height: auto !important;
+            min-height: 0 !important;
+            box-shadow: none !important;
+        }
+        div.stButton > button[key^="delete_item_"]:hover {
+            background: rgba(239, 68, 68, 0.15) !important;
+            color: #FFFFFF !important;
+            border-color: rgba(239, 68, 68, 0.3) !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
+        active_tab = st.session_state.active_chat_tab
+        if active_tab == "Chat":
+            st.markdown("""
+            <style>
+            div.stButton > button[key="chat_tab_btn"] {
+                border-bottom: 2px solid #A78BFA !important;
+                color: #A78BFA !important;
+            }
+            div.stButton > button[key="recent_chats_tab_btn"] {
+                color: #94A3B8 !important;
+            }
+            </style>
+            """, unsafe_allow_html=True)
+        else:
+            st.markdown("""
+            <style>
+            div.stButton > button[key="chat_tab_btn"] {
+                color: #94A3B8 !important;
+            }
+            div.stButton > button[key="recent_chats_tab_btn"] {
+                border-bottom: 2px solid #A78BFA !important;
+                color: #A78BFA !important;
+            }
+            </style>
+            """, unsafe_allow_html=True)
+
+        # Render Header
         st.markdown(f'''
         <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 4px; padding-bottom: 12px; margin-bottom: 16px; flex-shrink: 0;">
             <div style="display: flex; align-items: center; gap: 8px;">
@@ -2219,31 +2520,80 @@ def render_chat_panel(col_chat, df, slack_url, smtp_host, smtp_port, smtp_user, 
             </div>
             <span style="color: #64748B; cursor: pointer; font-size: 1.2rem;">✕</span>
         </div>
-        
-        <div style="display: flex; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 24px;">
-            <div style="flex: 1; text-align: center; padding: 8px 12px; color: #A78BFA; font-weight: 600; border-bottom: 2px solid #A78BFA; cursor: pointer; font-size: 0.9rem;">Chat</div>
-            <div {recent_title_attr} style="flex: 1; text-align: center; padding: 8px 12px; {recent_style} font-weight: 500; font-size: 0.9rem;">Recent Chats</div>
-        </div>
         ''', unsafe_allow_html=True)
-        
-        if "agent_graph" not in st.session_state:
-            st.markdown('''
-            <div style="background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 24px; text-align: center; margin-top: 20px;">
-                <h4 style="color: #F8FAFC; margin-bottom: 8px;">Agent Offline</h4>
-                <p style="color: #94A3B8; font-size: 0.9rem; margin: 0;">Please connect an AI provider via the <b>Configuration</b> tab in the left sidebar.</p>
-            </div>
-            ''', unsafe_allow_html=True)
+
+        # Render Tab Buttons side-by-side
+        tab_col1, tab_col2 = st.columns(2)
+        with tab_col1:
+            if st.button("Chat", key="chat_tab_btn", use_container_width=True):
+                st.session_state.active_chat_tab = "Chat"
+                st.rerun()
+        with tab_col2:
+            if st.button("Recent Chats", key="recent_chats_tab_btn", use_container_width=True):
+                st.session_state.active_chat_tab = "Recent"
+                st.rerun()
+
+        st.markdown("<div style='border-bottom: 1px solid rgba(255,255,255,0.05); margin-top: -10px; margin-bottom: 16px;'></div>", unsafe_allow_html=True)
+
+        # New Chat button
+        if st.button("➕ New Conversation", key="new_chat_btn", use_container_width=True):
+            st.session_state.active_thread_id = None
+            st.session_state.active_chat_tab = "Chat"
+            st.session_state.pending_query = None
+            st.rerun()
+
+        if active_tab == "Chat":
+            if "agent_graph" not in st.session_state:
+                st.markdown('''
+                <div style="background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 24px; text-align: center; margin-top: 20px;">
+                    <h4 style="color: #F8FAFC; margin-bottom: 8px;">Agent Offline</h4>
+                    <p style="color: #94A3B8; font-size: 0.9rem; margin: 0;">Please connect an AI provider via the <b>Configuration</b> tab in the left sidebar.</p>
+                </div>
+                ''', unsafe_allow_html=True)
+            else:
+                st.markdown('<div class="history-marker" style="display:none"></div>', unsafe_allow_html=True)
+                chat_container = render_chat_history(slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, target_email)
+                render_chat_input(chat_container, df, slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, target_email)
+                # Footer disclaimer
+                st.markdown('''
+                <div class="chat-disclaimer-footer" style="background: rgba(30, 41, 59, 0.4); border-radius: 8px; padding: 10px 12px; display: flex; align-items: flex-start; gap: 8px; color: #94A3B8; font-size: 0.75rem;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 1px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M12 8v4"></path><path d="M12 16h.01"></path></svg>
+                    <span>AI responses may not be 100% accurate. Please verify important insights.</span>
+                </div>
+                ''', unsafe_allow_html=True)
         else:
-            st.markdown('<div class="history-marker" style="display:none"></div>', unsafe_allow_html=True)
-            chat_container = render_chat_history(slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, target_email)
-            render_chat_input(chat_container, df, slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, target_email)
-            # Footer disclaimer
-            st.markdown('''
-            <div class="chat-disclaimer-footer" style="background: rgba(30, 41, 59, 0.4); border-radius: 8px; padding: 10px 12px; display: flex; align-items: flex-start; gap: 8px; color: #94A3B8; font-size: 0.75rem;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 1px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M12 8v4"></path><path d="M12 16h.01"></path></svg>
-                <span>AI responses may not be 100% accurate. Please verify important insights.</span>
-            </div>
-            ''', unsafe_allow_html=True)
+            # Recent tab contents
+            threads = st.session_state.threads
+            if not threads:
+                st.info("No recent conversations yet.")
+            else:
+                recent_container = st.container(border=False)
+                with recent_container:
+                    for tid, msgs in threads.items():
+                        title = "New Conversation"
+                        for m in msgs:
+                            if m["role"] == "user":
+                                title = m["content"]
+                                break
+                        if "<span" in title:
+                            import re
+                            title = re.sub(r'<[^>]*>', '', title)
+                        if len(title) > 30:
+                            title = title[:27] + "..."
+                        
+                        col_item, col_delete = st.columns([5, 1])
+                        with col_item:
+                            if st.button(f"💬 {title}", key=f"recent_item_{tid}", use_container_width=True):
+                                st.session_state.active_thread_id = tid
+                                st.session_state.active_chat_tab = "Chat"
+                                st.rerun()
+                        with col_delete:
+                            if st.button("🗑️", key=f"delete_item_{tid}", use_container_width=True, help="Delete conversation"):
+                                delete_chat_thread(tid)
+                                if st.session_state.active_thread_id == tid:
+                                    st.session_state.active_thread_id = None
+                                st.session_state.threads = load_chat_threads()
+                                st.rerun()
 
 def render_chat_history(slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, target_email):
     # Display chat messages from history
@@ -2363,59 +2713,16 @@ def render_chat_history(slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, t
                                     content_clean = msg["content"].replace("*", "")
                                     note_snippet = content_clean[:800] + ("..." if len(content_clean) > 800 else "")
 
-                        with btn_col1:
-                            docx_bytes = create_mitigation_docx(msg["content"])
-                            st.download_button(
-                                label="📥 DOCX",
-                                data=docx_bytes,
-                                file_name=f"chat_export_{idx}.docx",
-                                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                key=f"docx_{idx}",
-                                use_container_width=True
-                            )
-                        with btn_col2:
-                            if st.button("📧 Email", key=f"pdf_{idx}", help="Email to Manager", use_container_width=True):
-                                if not smtp_host or smtp_host == "smtp.example.com":
-                                    st.toast("⚠️ Please configure SMTP settings in the Configuration popover to send emails.", icon="⚠️")
-                                else:
-                                    pdf_bytes = create_mitigation_pdf(msg["content"])
-                                    success = send_manager_email(
-                                        target_email=target_email,
-                                        subject="HR Copilot Action Plan",
-                                        body="Please review the attached plan from the HR Copilot.",
-                                        attachment_bytes=pdf_bytes,
-                                        filename=f"copilot_export_{idx}.pdf",
-                                        smtp_host=smtp_host, smtp_port=smtp_port, smtp_user=smtp_user, smtp_pass=smtp_pass
+                                    success = dispatch_critical_alert(
+                                        webhook_url=slack_url,
+                                        employee_id=employee_id,
+                                        risk_score=risk_score,
+                                        mitigation_note=note_snippet
                                     )
                                     if success:
-                                        st.toast("Email Dispatched Successfully!", icon="✅")
+                                        st.toast("Slack Alert Triggered!", icon="✅")
                                     else:
-                                        st.error("Failed to send email.")
-                        with btn_col3:
-                            if st.button("💬 Slack", key=f"alert_{idx}", help="Send Slack Alert", use_container_width=True):
-                                if not slack_url or not slack_url.startswith("https://hooks.slack.com"):
-                                    st.toast("⚠️ Please configure your Slack Webhook URL in settings.", icon="⚠️")
-                                else:
-                                    import re
-                                    emp_match = re.search(r'EMP\d{4}', msg["content"])
-                                    employee_id = emp_match.group(0) if emp_match else "Multiple / General Insights"
-                                    
-                                    risk_match = re.search(r'(\d{2,3}\.\d)%', msg["content"])
-                                    risk_score = float(risk_match.group(1)) if risk_match else "N/A"
-                                    
-                                    content_clean = msg["content"].replace("*", "")
-                                    note_snippet = content_clean[:800] + ("..." if len(content_clean) > 800 else "")
-
-                        success = dispatch_critical_alert(
-                            webhook_url=slack_url,
-                            employee_id=employee_id,
-                            risk_score=risk_score,
-                            mitigation_note=note_snippet
-                        )
-                        if success:
-                            st.toast("Slack Alert Triggered!", icon="✅")
-                        else:
-                            st.error("Failed to send Slack alert.")
+                                        st.error("Failed to send Slack alert.")
 
                         # Follow-up Chips
                         st.markdown(
@@ -2591,9 +2898,11 @@ def render_chat_input(chat_container, df, slack_url, smtp_host, smtp_port, smtp_
 
     if prompt:
         with chat_container:
+            is_new_thread = False
             if not st.session_state.active_thread_id:
                 st.session_state.active_thread_id = str(uuid.uuid4())
                 st.session_state.threads[st.session_state.active_thread_id] = []
+                is_new_thread = True
                 
             display_prompt = prompt
             if prompt == "__GENERATE_EXEC_PLAN__": display_prompt = "Generate Executive Action Plan"
@@ -2602,7 +2911,12 @@ def render_chat_input(chat_container, df, slack_url, smtp_host, smtp_port, smtp_
             elif prompt == "__SCHEDULE_WEEKLY__": display_prompt = "Schedule weekly report"
 
             st.chat_message("user", avatar="👤").markdown(f"<span class='user-marker' style='display:none'></span>{display_prompt}", unsafe_allow_html=True)
-            st.session_state.threads[st.session_state.active_thread_id].append({"role": "user", "content": display_prompt, "original_prompt": prompt})
+            
+            if is_new_thread:
+                title = display_prompt[:35] + ("..." if len(display_prompt) > 35 else "")
+                save_chat_thread(st.session_state.active_thread_id, title)
+                
+            append_and_save_message(st.session_state.active_thread_id, {"role": "user", "content": display_prompt, "original_prompt": prompt})
 
             with st.chat_message("assistant", avatar="✨"):
                 st.markdown("<span class='assistant-marker' style='display:none'></span>", unsafe_allow_html=True)
@@ -2664,7 +2978,7 @@ def render_chat_input(chat_container, df, slack_url, smtp_host, smtp_port, smtp_
                             # Reset states
                             st.session_state.generating_exec_plan = False
                             # Add a fake user/assistant message to thread so chat history makes sense
-                            st.session_state.threads[st.session_state.active_thread_id].append({
+                            append_and_save_message(st.session_state.active_thread_id, {
                                 "role": "assistant",
                                 "content": "I have successfully generated the Executive Action Plan. You can download it below.",
                                 "intent": "generate_report",
@@ -2700,7 +3014,7 @@ def render_chat_input(chat_container, df, slack_url, smtp_host, smtp_port, smtp_
                             </table>
                         </div>
                         """
-                        st.session_state.threads[st.session_state.active_thread_id].append({
+                        append_and_save_message(st.session_state.active_thread_id, {
                             "role": "assistant",
                             "content": "The Executive Action Plan has been autonomously generated and delivered to the configured HR contact.",
                             "html_after": card_html,
@@ -2734,7 +3048,7 @@ def render_chat_input(chat_container, df, slack_url, smtp_host, smtp_port, smtp_
                             </table>
                         </div>
                         """
-                        st.session_state.threads[st.session_state.active_thread_id].append({
+                        append_and_save_message(st.session_state.active_thread_id, {
                             "role": "assistant",
                             "content": "The Slack announcement has been autonomously dispatched to the #hr-leads channel.",
                             "html_after": card_html,
@@ -2746,7 +3060,7 @@ def render_chat_input(chat_container, df, slack_url, smtp_host, smtp_port, smtp_
                         st.error(f"Slack Dispatch Error: {e}")
                         st.stop()
                 elif prompt == "__SCHEDULE_WEEKLY__":
-                    st.session_state.threads[st.session_state.active_thread_id].append({
+                    append_and_save_message(st.session_state.active_thread_id, {
                         "role": "assistant",
                         "content": "### ✅ Weekly Executive Briefing Scheduled\n\nThe AI Copilot will automatically run the full predictive pipeline and distribute the results.\n\n**Schedule:** Every Monday at 08:00 AM\n**Format:** PDF Dashboard + Editable DOCX Action Plan\n**Recipients:** `CHRO`, `HR Leads`, `COO`\n\nI will notify you here each time a report is generated and sent.",
                         "intent": "schedule_weekly"
@@ -2768,7 +3082,7 @@ def render_chat_input(chat_container, df, slack_url, smtp_host, smtp_port, smtp_
 
                         message_placeholder.markdown(ai_message)
 
-                        st.session_state.threads[st.session_state.active_thread_id].append({
+                        append_and_save_message(st.session_state.active_thread_id, {
                             "role": "assistant", 
                             "content": ai_message,
                             "intent": intent
