@@ -10,15 +10,27 @@ import matplotlib.pyplot as plt
 
 
 def _html_to_pdf(html_content: str) -> bytes:
-    try:
-        from weasyprint import HTML
-    except (ImportError, OSError) as exc:
-        raise RuntimeError(
-            "PDF generation requires WeasyPrint's native GTK libraries, which are not "
-            "installed on this system. Install the GTK3 runtime for Windows, then retry. "
-            "See https://doc.courtbouillon.org/weasyprint/stable/first_steps.html#windows"
-        ) from exc
-    return HTML(string=html_content).write_pdf()
+    """
+    Render HTML-ish content to PDF using fpdf2 only (no WeasyPrint/GTK dependency).
+    """
+    import re
+    from fpdf import FPDF
+
+    text = re.sub(r"(?is)<(script|style).*?>.*?</\1>", "", html_content)
+    text = re.sub(r"(?is)<br\s*/?>", "\n", text)
+    text = re.sub(r"(?is)</p>", "\n\n", text)
+    text = re.sub(r"(?is)<[^>]+>", "", text)
+    text = re.sub(r"[ \t]+\n", "\n", text).strip()
+
+    pdf = FPDF()
+    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.add_page()
+    pdf.set_font("Helvetica", size=11)
+    safe = text.encode("latin-1", errors="replace").decode("latin-1")
+    pdf.multi_cell(0, 6, safe)
+    buf = BytesIO()
+    pdf.output(buf)
+    return buf.getvalue()
 
 def create_mitigation_docx(narrative: str) -> bytes:
     doc = Document()
@@ -260,54 +272,38 @@ def create_executive_action_plan_docx(df) -> bytes:
     return buffer.getvalue()
 
 def create_mitigation_pdf(narrative: str) -> bytes:
-    html_content = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="utf-8">
-        <title>Mitigation Report</title>
-        <style>
-            body {{
-                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-                color: #333;
-                line-height: 1.6;
-                padding: 40px;
-            }}
-            h1 {{
-                color: #FF3366;
-                border-bottom: 2px solid #FF3366;
-                padding-bottom: 10px;
-            }}
-            h2 {{
-                color: #1C2130;
-                margin-top: 30px;
-            }}
-            .timestamp {{
-                color: #888;
-                font-size: 0.9em;
-                margin-bottom: 30px;
-            }}
-            .content {{
-                background-color: #f9f9f9;
-                padding: 20px;
-                border-radius: 5px;
-                border-left: 4px solid #FF3366;
-                white-space: pre-wrap;
-            }}
-        </style>
-    </head>
-    <body>
-        <h1>ThinkPalm PeopleRisk AI</h1>
-        <h2>Manager Mitigation Action Plan</h2>
-        <div class="timestamp">Generated on: {{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}}</div>
-        
-        <h2>Recommended Action Narrative</h2>
-        <div class="content">{narrative}</div>
-    </body>
-    </html>
-    """
-    
-    return _html_to_pdf(html_content)
+    """Mitigation action plan PDF via fpdf2 (no GTK required)."""
+    from fpdf import FPDF
+
+    pdf = FPDF()
+    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.add_page()
+
+    pdf.set_font("Helvetica", "B", 18)
+    pdf.set_text_color(255, 51, 102)
+    pdf.cell(0, 10, "ThinkPalm PeopleRisk AI", ln=True)
+
+    pdf.set_font("Helvetica", "B", 14)
+    pdf.set_text_color(28, 33, 48)
+    pdf.cell(0, 9, "Manager Mitigation Action Plan", ln=True)
+
+    pdf.set_font("Helvetica", "", 9)
+    pdf.set_text_color(136, 136, 136)
+    pdf.cell(0, 7, f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", ln=True)
+    pdf.ln(4)
+
+    pdf.set_font("Helvetica", "B", 12)
+    pdf.set_text_color(28, 33, 48)
+    pdf.cell(0, 8, "Recommended Action Narrative", ln=True)
+
+    pdf.set_font("Helvetica", "", 11)
+    pdf.set_text_color(51, 51, 51)
+    safe = (narrative or "").encode("latin-1", errors="replace").decode("latin-1")
+    pdf.multi_cell(0, 6, safe)
+
+    buf = BytesIO()
+    pdf.output(buf)
+    return buf.getvalue()
 
 def send_executive_email(smtp_host, smtp_port, smtp_user, smtp_pass, target_email, attachment_bytes, attachment_name="Executive_Action_Plan.docx"):
     msg = EmailMessage()
