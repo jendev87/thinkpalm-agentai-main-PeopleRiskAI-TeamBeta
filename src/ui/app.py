@@ -3113,16 +3113,37 @@ def render_chat_input(chat_container, df, slack_url, smtp_host, smtp_port, smtp_
 def load_risk_data():
     project_root = Path(__file__).parent.parent.parent
     db_path = project_root / 'hr_data.db'
-    if not db_path.exists():
-        return pd.DataFrame()
     
     with sqlite3.connect(db_path) as conn:
+        # Check if the required table 'employees' exists.
+        # hr_data.db is created early by init_chat_db(), so db_path.exists() is true even if hr_data lacks HR data.
+        cursor = conn.cursor()
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='employees'")
+        if not cursor.fetchone():
+            try:
+                sample_data = project_root / "sample_data" / "synthetic_hr_roster_1000.csv"
+                if sample_data.exists():
+                    new_df = pd.read_csv(sample_data)
+                    core_cols = ['EmployeeID', 'Tenure', 'Department', 'Role', 'MonthlyHours', 'LastPromotion', 'Salary', 'Attrition']
+                    emp_df = new_df[[c for c in core_cols if c in new_df.columns]]
+                    emp_df.to_sql('employees', conn, if_exists='replace', index=False)
+                    
+                    ml_cols = ['EmployeeID', 'RiskPercentage', 'Driver1', 'Driver2', 'Driver3']
+                    ml_df = new_df[[c for c in ml_cols if c in new_df.columns]]
+                    ml_df.to_sql('attrition_scores', conn, if_exists='replace', index=False)
+            except Exception as e:
+                print(f"Auto-restore failed: {e}")
+                return pd.DataFrame()
+
         query = """
             SELECT e.*, a.RiskPercentage, a.Driver1, a.Driver2, a.Driver3 
             FROM employees e 
             LEFT JOIN attrition_scores a ON e.EmployeeID = a.EmployeeID
         """
-        df = pd.read_sql_query(query, conn)
+        try:
+            df = pd.read_sql_query(query, conn)
+        except Exception:
+            return pd.DataFrame()
     return df
 
 def main():
