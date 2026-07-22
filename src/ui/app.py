@@ -272,8 +272,8 @@ def _chart_aggregates(df: pd.DataFrame):
     bins = [0, 25, 50, 75, 100]
     labels = ["Low", "Medium", "High", "Critical"]
     risk_strat = pd.cut(df["RiskPercentage"], bins=bins, labels=labels, include_lowest=True)
-    tenure_agg = df.groupby("Tenure", as_index=False)["RiskPercentage"].mean()
-    hours_agg = df.groupby("MonthlyHours", as_index=False)["RiskPercentage"].mean()
+    tenure_agg = df.groupby("Tenure", as_index=False)["RiskPercentage"].mean().sort_values("Tenure")
+    hours_agg = df.groupby("MonthlyHours", as_index=False)["RiskPercentage"].mean().sort_values("MonthlyHours")
     strat_counts = risk_strat.value_counts().reset_index()
     strat_counts.columns = ["Risk Level", "Count"]
     heat_agg = df.groupby(["Department", "Role"], as_index=False)["RiskPercentage"].mean()
@@ -367,9 +367,9 @@ def render_header():
     }
 
     .block-container {
-        padding-left: 24px !important;
-        padding-right: 24px !important;
-        padding-top: 24px !important;
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+        padding-top: 16px !important;
         padding-bottom: 0 !important;
         max-width: 100% !important;
     }
@@ -382,9 +382,9 @@ def render_header():
     /* 3. SIDEBAR REDESIGN (PERMANENTLY OPEN) */
     /* ========================================== */
     [data-testid="stSidebar"] {
-        min-width: 250px !important;
-        max-width: 250px !important;
-        width: 250px !important;
+        min-width: 220px !important;
+        max-width: 220px !important;
+        width: 220px !important;
         background-color: #111827 !important;
         border-right: 1px solid rgba(255, 255, 255, 0.03) !important;
         transform: translateX(0px) !important;
@@ -640,6 +640,22 @@ def render_header():
         padding: 16px 24px 28px 24px !important;
     }
 
+    @media (max-width: 1500px) {
+        div[data-testid="stColumn"]:has(.dashboard-scroll-anchor) div[data-testid="stHorizontalBlock"]:has(.kpi-card),
+        div[data-testid="stColumn"]:has(.dashboard-scroll-anchor) div[data-testid="stHorizontalBlock"]:has(.js-plotly-plot) {
+            flex-wrap: wrap !important;
+            row-gap: 24px !important;
+        }
+        div[data-testid="stColumn"]:has(.dashboard-scroll-anchor) div[data-testid="stHorizontalBlock"]:has(.kpi-card) > div[data-testid="stColumn"] {
+            min-width: calc(50% - 1rem) !important;
+            flex: 1 1 calc(50% - 1rem) !important;
+        }
+        div[data-testid="stColumn"]:has(.dashboard-scroll-anchor) div[data-testid="stHorizontalBlock"]:has(.js-plotly-plot) > div[data-testid="stColumn"] {
+            min-width: 100% !important;
+            flex: 1 1 100% !important;
+        }
+    }
+
     @media (max-width: 1400px) {
         div[data-testid="stColumn"]:has(.chat-scroll-anchor) {
             flex: 0 0 340px !important;
@@ -693,7 +709,8 @@ def render_header():
     /* Chat Bubble CSS moved and consolidated below */
     
     /* Unified Assistant Bubble Action Buttons (DOCX/PDF/Alert and Follow-up Chips) */
-    div[data-testid="stChatMessage"]:has(.assistant-marker) button {
+    div[data-testid="stChatMessage"]:has(.assistant-marker) .stButton > button,
+    div[data-testid="stChatMessage"]:has(.assistant-marker) .stDownloadButton > button {
         background: rgba(255, 255, 255, 0.05) !important;
         border: 1px solid rgba(255, 255, 255, 0.1) !important;
         border-radius: 8px !important;
@@ -717,7 +734,8 @@ def render_header():
         transform: none !important;
     }
     
-    div[data-testid="stChatMessage"]:has(.assistant-marker) button:hover {
+    div[data-testid="stChatMessage"]:has(.assistant-marker) .stButton > button:hover,
+    div[data-testid="stChatMessage"]:has(.assistant-marker) .stDownloadButton > button:hover {
         background: rgba(255, 255, 255, 0.15) !important;
         border-color: rgba(255, 255, 255, 0.25) !important;
         color: #FFFFFF !important;
@@ -757,29 +775,37 @@ def render_header():
     div[data-testid="stChatInput"] {
         background: #111827 !important;
         border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        border-radius: 12px !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
-        padding-right: 4px !important;
+        border-radius: 8px !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
+        padding-right: 2px !important;
+        min-height: 40px !important;
     }
     div[data-testid="stChatInput"] textarea {
         color: #F8FAFC !important;
         background: transparent !important;
+        padding-top: 10px !important;
+        padding-bottom: 10px !important;
     }
     div[data-testid="stChatInput"] textarea::placeholder {
         color: #64748B !important;
     }
     div[data-testid="stChatInput"] button {
-        background: #7C3AED !important;
-        color: #FFFFFF !important;
-        border-radius: 50% !important;
-        padding: 8px !important;
-        width: 36px !important;
-        height: 36px !important;
-        margin-top: 4px !important;
+        background: transparent !important;
+        color: #A78BFA !important;
+        border-radius: 4px !important;
+        padding: 4px !important;
+        width: 32px !important;
+        height: 32px !important;
+        margin-top: 6px !important;
+    }
+    div[data-testid="stChatInput"] button:hover {
+        background: rgba(167, 139, 250, 0.1) !important;
     }
     div[data-testid="stChatInput"] button svg {
-        fill: #FFFFFF !important;
-        color: #FFFFFF !important;
+        fill: #A78BFA !important;
+        color: #A78BFA !important;
+        width: 16px !important;
+        height: 16px !important;
     }
 
     /* Dashboard: Absolute fill with explicit scrolling */
@@ -921,27 +947,38 @@ def render_header():
     /* ========================================== */
     /* 7. CHAT */
     /* ========================================== */
-    div.stButton > button[key^="suggested_"] {
+    /* Force Streamlit button containers to be inline for chips */
+    div:has(> div > div.stButton > button[key^="suggested_"]) {
+        display: inline-block !important;
         width: auto !important;
-        text-align: left !important;
-        justify-content: flex-start !important;
-        background: rgba(255, 255, 255, 0.03) !important;
-        border: 1px solid rgba(255, 255, 255, 0.05) !important;
-        border-radius: 999px !important;
-        padding: 6px 16px !important;
-        color: #E2E8F0 !important;
-        font-size: 0.82rem !important;
-        transition: all 0.2s ease-in-out !important;
+        margin-right: 6px !important;
         margin-bottom: 6px !important;
     }
-    div.stButton > button[key^="suggested_"]:hover {
-        background: rgba(255, 255, 255, 0.08) !important;
-        border-color: rgba(255, 255, 255, 0.1) !important;
-        transform: translateY(-1px) !important;
+    div.stButton > button[key^="suggested_"] {
+        width: auto !important;
+        display: inline-flex !important;
+        text-align: center !important;
+        justify-content: center !important;
+        background: rgba(255, 255, 255, 0.03) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 999px !important;
+        padding: 4px 12px !important;
+        color: #CBD5E1 !important;
+        font-size: 0.75rem !important;
+        transition: all 0.2s ease-in-out !important;
+        margin: 0 !important;
+        min-height: 28px !important;
     }
-    div.stButton > button[key="suggested_tenure"] p { color: #F97316 !important; }
-    div.stButton > button[key="suggested_salary"] p { color: #3B82F6 !important; }
-    div.stButton > button[key="suggested_risk"] p { color: #A855F7 !important; }
+    div.stButton > button[key^="suggested_"] p { 
+        font-size: 0.75rem !important; 
+        margin: 0 !important;
+    }
+    div.stButton > button[key^="suggested_"]:hover {
+        background: rgba(255, 255, 255, 0.1) !important;
+        border-color: rgba(255, 255, 255, 0.3) !important;
+        color: #FFFFFF !important;
+        box-shadow: 0 0 8px rgba(255,255,255,0.1) !important;
+    }
 
     /* Make the marker invisible */
     div[data-testid="stColumn"]:has(.chat-scroll-anchor) > div[data-testid="stVerticalBlock"] > div:has(.history-marker) {
@@ -978,12 +1015,12 @@ def render_header():
         background: transparent !important;
         border: none !important;
         padding: 0 !important;
-        margin-bottom: 24px !important;
+        margin-bottom: 12px !important;
         box-shadow: none !important;
         
         display: flex !important;
         flex-direction: column !important;
-        gap: 8px !important;
+        gap: 4px !important;
         align-items: flex-start !important;
         width: 100% !important;
         max-width: 100% !important;
@@ -1005,36 +1042,36 @@ def render_header():
         justify-content: flex-start !important;
         width: auto !important;
         height: auto !important;
-        padding: 0 4px !important;
+        padding: 0 2px !important;
         color: #94A3B8 !important;
-        font-size: 1rem !important;
+        font-size: 0.9rem !important;
         flex-direction: row !important;
     }
 
     /* Add Header Text Next to Avatars */
     div[data-testid="stChatMessage"]:has(.assistant-marker) > div:first-child::after {
         content: "AI Assistant";
-        margin-left: 8px;
+        margin-left: 6px;
         font-weight: 600;
-        font-size: 0.85rem;
+        font-size: 0.8rem;
         color: #E2E8F0;
         letter-spacing: 0.02em;
     }
 
     div[data-testid="stChatMessage"]:has(.user-marker) > div:first-child::after {
         content: "You";
-        margin-left: 8px;
+        margin-left: 6px;
         font-weight: 600;
-        font-size: 0.85rem;
+        font-size: 0.8rem;
         color: #94A3B8;
         letter-spacing: 0.02em;
     }
 
     /* Message Content Cards - Content is ALWAYS the second child */
     div[data-testid="stChatMessage"] > div:nth-child(2) {
-        font-size: 0.95rem !important;
-        line-height: 1.5 !important;
-        padding: 12px !important;
+        font-size: 0.9rem !important;
+        line-height: 1.4 !important;
+        padding: 8px 12px !important;
         width: 100% !important;
         max-width: 100% !important;
         margin: 0 !important;
@@ -1049,13 +1086,13 @@ def render_header():
     /* AI Message Card styling — full width so action rows fit */
     div[data-testid="stChatMessage"]:has(.assistant-marker) > div:nth-child(2) {
         background: #151B26 !important;
-        border: 1px solid rgba(255, 255, 255, 0.06) !important;
+        border: 1px solid rgba(255, 255, 255, 0.04) !important;
         color: #E2E8F0 !important;
         max-width: 100% !important;
         width: 100% !important;
         box-sizing: border-box !important;
         overflow: hidden !important;
-        border-radius: 4px 12px 12px 12px !important;
+        border-radius: 4px 8px 8px 8px !important;
     }
 
     /* User Message Card styling */
@@ -2286,7 +2323,7 @@ def render_dashboard(col_dash, df, slack_url, smtp_host, smtp_port, smtp_user, s
                 st.markdown("<p style='color: #94A3B8; font-size: 0.9rem; margin-bottom: 24px;'>Real-time insights and predictive flight risk metrics.</p>", unsafe_allow_html=True)
                 
                 # Toolbar
-                tb_col1, tb_col2, tb_col3 = st.columns([4, 1.8, 1.2], gap="small")
+                tb_col1, tb_col2, tb_col3 = st.columns([2.5, 2.5, 2], gap="small")
                 with tb_col1:
                     st.text_input("Search...", label_visibility="collapsed", placeholder="🔍 Search employee database...", key="dash_search")
                 with tb_col2:
@@ -2405,15 +2442,15 @@ def render_chat_panel(col_chat, df, slack_url, smtp_host, smtp_port, smtp_user, 
         st.markdown("""
         <style>
         /* Chat Tab Buttons styling */
-        div.stButton > button[key="chat_tab_btn"],
-        div.stButton > button[key="recent_chats_tab_btn"] {
+        div[data-testid="stElementContainer"]:has(.chat-tabs-marker) + div[data-testid="stHorizontalBlock"] div[data-testid="column"]:nth-child(1) div.stButton > button,
+        div[data-testid="stElementContainer"]:has(.chat-tabs-marker) + div[data-testid="stHorizontalBlock"] div[data-testid="column"]:nth-child(2) div.stButton > button {
             background: transparent !important;
             border: none !important;
-            border-radius: 0 !important;
+            border-radius: 6px !important;
             box-shadow: none !important;
             font-weight: 600 !important;
-            font-size: 0.9rem !important;
-            padding: 8px 12px !important;
+            font-size: 0.85rem !important;
+            padding: 4px 8px !important;
             width: 100% !important;
             text-align: center !important;
             margin: 0 !important;
@@ -2422,20 +2459,25 @@ def render_chat_panel(col_chat, df, slack_url, smtp_host, smtp_port, smtp_user, 
             transition: all 0.2s ease !important;
         }
         /* New chat button */
-        div.stButton > button[key="new_chat_btn"] {
-            background: rgba(124, 58, 237, 0.1) !important;
-            border: 1px solid rgba(124, 58, 237, 0.2) !important;
+        div[data-testid="stElementContainer"]:has(.chat-tabs-marker) + div[data-testid="stHorizontalBlock"] div[data-testid="column"]:nth-child(3) div.stButton > button {
+            background: transparent !important;
+            border: 1px solid rgba(255,255,255,0.1) !important;
             color: #A78BFA !important;
-            border-radius: 12px !important;
-            padding: 8px 12px !important;
-            margin-bottom: 16px !important;
+            border-radius: 6px !important;
+            padding: 4px !important;
+            margin: 0 !important;
             font-weight: 600 !important;
             width: 100% !important;
+            height: auto !important;
+            min-height: 0 !important;
             box-shadow: none !important;
+            font-size: 0.9rem !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
         }
-        div.stButton > button[key="new_chat_btn"]:hover {
-            background: rgba(124, 58, 237, 0.2) !important;
-            border-color: rgba(124, 58, 237, 0.4) !important;
+        div[data-testid="stElementContainer"]:has(.chat-tabs-marker) + div[data-testid="stHorizontalBlock"] div[data-testid="column"]:nth-child(3) div.stButton > button:hover {
+            background: rgba(255, 255, 255, 0.1) !important;
             color: #FFFFFF !important;
         }
         /* Recent Chat Item Buttons */
@@ -2497,11 +2539,13 @@ def render_chat_panel(col_chat, df, slack_url, smtp_host, smtp_port, smtp_user, 
         if active_tab == "Chat":
             st.markdown("""
             <style>
-            div.stButton > button[key="chat_tab_btn"] {
-                border-bottom: 2px solid #A78BFA !important;
-                color: #A78BFA !important;
+            div[data-testid="stElementContainer"]:has(.chat-tabs-marker) + div[data-testid="stHorizontalBlock"] div[data-testid="column"]:nth-child(1) div.stButton > button {
+                background: rgba(255, 255, 255, 0.1) !important;
+                color: #FFFFFF !important;
+                border-radius: 6px !important;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.2) !important;
             }
-            div.stButton > button[key="recent_chats_tab_btn"] {
+            div[data-testid="stElementContainer"]:has(.chat-tabs-marker) + div[data-testid="stHorizontalBlock"] div[data-testid="column"]:nth-child(2) div.stButton > button {
                 color: #94A3B8 !important;
             }
             </style>
@@ -2509,49 +2553,50 @@ def render_chat_panel(col_chat, df, slack_url, smtp_host, smtp_port, smtp_user, 
         else:
             st.markdown("""
             <style>
-            div.stButton > button[key="chat_tab_btn"] {
+            div[data-testid="stElementContainer"]:has(.chat-tabs-marker) + div[data-testid="stHorizontalBlock"] div[data-testid="column"]:nth-child(1) div.stButton > button {
                 color: #94A3B8 !important;
             }
-            div.stButton > button[key="recent_chats_tab_btn"] {
-                border-bottom: 2px solid #A78BFA !important;
-                color: #A78BFA !important;
+            div[data-testid="stElementContainer"]:has(.chat-tabs-marker) + div[data-testid="stHorizontalBlock"] div[data-testid="column"]:nth-child(2) div.stButton > button {
+                background: rgba(255, 255, 255, 0.1) !important;
+                color: #FFFFFF !important;
+                border-radius: 6px !important;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.2) !important;
             }
             </style>
             """, unsafe_allow_html=True)
 
         # Render Header
         st.markdown(f'''
-        <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 4px; padding-bottom: 12px; margin-bottom: 16px; flex-shrink: 0;">
+        <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 0px; padding-bottom: 8px; margin-bottom: 8px; flex-shrink: 0;">
             <div style="display: flex; align-items: center; gap: 8px;">
-                <div style="background: rgba(124, 58, 237, 0.2); width: 32px; height: 32px; min-height: 32px; border-radius: 50%; color: #A78BFA; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                <div style="background: rgba(124, 58, 237, 0.15); width: 24px; height: 24px; min-height: 24px; border-radius: 50%; color: #A78BFA; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
                 </div>
-                <h3 style="margin: 0; padding: 0; color: #F8FAFC; font-size: 1.1rem; font-weight: 700; line-height: 1.3; white-space: nowrap;">AI Assistant</h3>
-                <span style="background: #7C3AED; color: #FFFFFF; font-size: 0.6rem; font-weight: 700; padding: 2px 8px; border-radius: 12px; line-height: 1.2;">BETA</span>
+                <h3 style="margin: 0; padding: 0; color: #F8FAFC; font-size: 1rem; font-weight: 600; line-height: 1.2; white-space: nowrap;">AI Assistant</h3>
+                <span style="border: 1px solid rgba(255,255,255,0.15); color: #94A3B8; font-size: 0.55rem; font-weight: 600; padding: 2px 6px; border-radius: 4px; line-height: 1;">BETA</span>
             </div>
-            <span style="color: #64748B; cursor: pointer; font-size: 1.2rem;">✕</span>
+            <span style="color: #64748B; cursor: pointer; font-size: 1rem; padding-right: 4px;">✕</span>
         </div>
         ''', unsafe_allow_html=True)
 
-        # Render Tab Buttons side-by-side
-        tab_col1, tab_col2 = st.columns(2)
+        # Segmented Control Wrapper & New Chat Button
+        st.markdown("<div class='chat-tabs-marker' style='background: rgba(0,0,0,0.2); padding: 4px; border-radius: 8px; margin-bottom: 12px; display: flex;'>", unsafe_allow_html=True)
+        tab_col1, tab_col2, tab_col3 = st.columns([1, 1, 0.25], gap="small")
         with tab_col1:
             if st.button("Chat", key="chat_tab_btn", use_container_width=True):
                 st.session_state.active_chat_tab = "Chat"
                 st.rerun()
         with tab_col2:
-            if st.button("Recent Chats", key="recent_chats_tab_btn", use_container_width=True):
+            if st.button("Recent", key="recent_chats_tab_btn", use_container_width=True):
                 st.session_state.active_chat_tab = "Recent"
                 st.rerun()
-
-        st.markdown("<div style='border-bottom: 1px solid rgba(255,255,255,0.05); margin-top: -10px; margin-bottom: 16px;'></div>", unsafe_allow_html=True)
-
-        # New Chat button
-        if st.button("➕ New Conversation", key="new_chat_btn", use_container_width=True):
-            st.session_state.active_thread_id = None
-            st.session_state.active_chat_tab = "Chat"
-            st.session_state.pending_query = None
-            st.rerun()
+        with tab_col3:
+            if st.button("➕", key="new_chat_btn", help="New Conversation", use_container_width=True):
+                st.session_state.active_thread_id = None
+                st.session_state.active_chat_tab = "Chat"
+                st.session_state.pending_query = None
+                st.rerun()
+        st.markdown("</div>", unsafe_allow_html=True)
 
         if active_tab == "Chat":
             if "agent_graph" not in st.session_state:
@@ -2740,37 +2785,34 @@ def render_chat_history(slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, t
                             "<div style='margin-top: 16px; margin-bottom: 8px; color: #94A3B8; font-size: 0.8rem; font-weight: 500;'>✨ Suggested Follow-up</div>",
                             unsafe_allow_html=True,
                         )
-                        f_col1, f_col2 = st.columns(2)
-                        with f_col1:
-                            if st.button("Show Employees", key=f"fu1_{idx}", use_container_width=True):
-                                st.session_state.pending_query = "Show the employees for this analysis"
-                                st.rerun()
-                            if st.button("Email Manager", key=f"fu3_{idx}", use_container_width=True):
-                                st.session_state.pending_query = "Draft an email to the manager"
-                                st.rerun()
-                        with f_col2:
-                            if st.button("Compare Depts", key=f"fu2_{idx}", use_container_width=True):
-                                st.session_state.pending_query = "Compare risk across departments"
-                                st.rerun()
-                            if st.button("Create Plan", key=f"fu4_{idx}", use_container_width=True):
-                                st.session_state.pending_query = "Create a retention action plan"
-                                st.rerun()
+                        if st.button("Show Employees", key=f"suggested_fu1_{idx}", use_container_width=False):
+                            st.session_state.pending_query = "Show the employees for this analysis"
+                            st.rerun()
+                        if st.button("Email Manager", key=f"suggested_fu3_{idx}", use_container_width=False):
+                            st.session_state.pending_query = "Draft an email to the manager"
+                            st.rerun()
+                        if st.button("Compare Depts", key=f"suggested_fu2_{idx}", use_container_width=False):
+                            st.session_state.pending_query = "Compare risk across departments"
+                            st.rerun()
+                        if st.button("Create Plan", key=f"suggested_fu4_{idx}", use_container_width=False):
+                            st.session_state.pending_query = "Create a retention action plan"
+                            st.rerun()
 
         # Empty state / Suggested Questions
         if not current_messages:
-            q1 = "💬 How does attrition risk vary by department?"
-            q2 = "💬 Show high risk employees with low tenure"
-            q3 = "💬 What impact will attrition have on our business?"
-            q4 = "💬 Compare risk trends with previous quarter"
+            q1 = "Risk by department"
+            q2 = "High risk, low tenure"
+            q3 = "Business impact"
+            q4 = "Quarterly trends"
             
-            if st.button(q1, key="suggested_1", use_container_width=True):
-                st.session_state.pending_query = q1.replace("💬 ", "")
-            if st.button(q2, key="suggested_2", use_container_width=True):
-                st.session_state.pending_query = q2.replace("💬 ", "")
-            if st.button(q3, key="suggested_3", use_container_width=True):
-                st.session_state.pending_query = q3.replace("💬 ", "")
-            if st.button(q4, key="suggested_4", use_container_width=True):
-                st.session_state.pending_query = q4.replace("💬 ", "")
+            if st.button(q1, key="suggested_1", use_container_width=False):
+                st.session_state.pending_query = "How does attrition risk vary by department?"
+            if st.button(q2, key="suggested_2", use_container_width=False):
+                st.session_state.pending_query = "Show high risk employees with low tenure"
+            if st.button(q3, key="suggested_3", use_container_width=False):
+                st.session_state.pending_query = "What impact will attrition have on our business?"
+            if st.button(q4, key="suggested_4", use_container_width=False):
+                st.session_state.pending_query = "Compare risk trends with previous quarter"
 
     return chat_container
 
