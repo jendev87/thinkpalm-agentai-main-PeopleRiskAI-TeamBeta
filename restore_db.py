@@ -1,7 +1,7 @@
 import sqlite3
 import pandas as pd
 
-new_df = pd.read_csv("synthetic_hr_roster_1000.csv")
+new_df = pd.read_csv("sample_data/synthetic_hr_roster_1000.csv")
 conn = sqlite3.connect('hr_data.db')
 
 core_cols = ['EmployeeID', 'Tenure', 'Department', 'Role', 'MonthlyHours', 'LastPromotion', 'Salary', 'Attrition']

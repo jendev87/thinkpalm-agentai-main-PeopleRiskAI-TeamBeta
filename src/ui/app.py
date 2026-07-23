@@ -21,14 +21,198 @@ from src.automation.reporter import create_mitigation_docx, create_mitigation_pd
 from src.automation.notifier import send_manager_email
 from src.automation.slack import dispatch_critical_alert
 from src.automation.report_engine import generate_executive_pdf
+from src.analytics.explainability import ingest_and_score
 
 st.set_page_config(page_title="PeopleRisk AI", page_icon="🎯", layout="wide", initial_sidebar_state="expanded")
 
 import uuid
+
+def init_chat_db():
+    project_root = Path(__file__).parent.parent.parent
+    db_path = project_root / 'hr_data.db'
+    with sqlite3.connect(db_path) as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS chat_threads (
+                thread_id TEXT PRIMARY KEY,
+                title TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS chat_messages (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                thread_id TEXT,
+                role TEXT,
+                content TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (thread_id) REFERENCES chat_threads(thread_id) ON DELETE CASCADE
+            )
+        """)
+        
+        # Verify and add any missing columns in chat_messages
+        cursor.execute("PRAGMA table_info(chat_messages)")
+        existing_cols = {col[1] for col in cursor.fetchall()}
+        
+        required_cols = {
+            "intent": "TEXT",
+            "html_after": "TEXT",
+            "attachment_bytes": "BLOB",
+            "attachment_name": "TEXT",
+            "attachment_size": "TEXT",
+            "hide_default_buttons": "INTEGER",
+            "options": "TEXT",
+            "original_prompt": "TEXT"
+        }
+        
+        for col_name, col_type in required_cols.items():
+            if col_name not in existing_cols:
+                cursor.execute(f"ALTER TABLE chat_messages ADD COLUMN {col_name} {col_type}")
+                
+        conn.commit()
+
+def load_chat_threads():
+    project_root = Path(__file__).parent.parent.parent
+    db_path = project_root / 'hr_data.db'
+    threads = {}
+    with sqlite3.connect(db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM chat_threads ORDER BY updated_at DESC")
+        thread_rows = cursor.fetchall()
+        for t_row in thread_rows:
+            thread_id = t_row["thread_id"]
+            cursor.execute("SELECT * FROM chat_messages WHERE thread_id = ? ORDER BY id ASC", (thread_id,))
+            msg_rows = cursor.fetchall()
+            messages = []
+            for m_row in msg_rows:
+                cols = m_row.keys()
+                msg = {
+                    "role": m_row["role"] if "role" in cols else None,
+                    "content": m_row["content"] if "content" in cols else None,
+                }
+                if "intent" in cols and m_row["intent"]:
+                    msg["intent"] = m_row["intent"]
+                if "html_after" in cols and m_row["html_after"]:
+                    msg["html_after"] = m_row["html_after"]
+                if "attachment_bytes" in cols and m_row["attachment_bytes"]:
+                    msg["attachment_bytes"] = m_row["attachment_bytes"]
+                if "attachment_name" in cols and m_row["attachment_name"]:
+                    msg["attachment_name"] = m_row["attachment_name"]
+                if "attachment_size" in cols and m_row["attachment_size"]:
+                    msg["attachment_size"] = m_row["attachment_size"]
+                if "hide_default_buttons" in cols and m_row["hide_default_buttons"] is not None:
+                    msg["hide_default_buttons"] = bool(m_row["hide_default_buttons"])
+                if "options" in cols and m_row["options"]:
+                    try:
+                        msg["options"] = json.loads(m_row["options"])
+                    except Exception:
+                        pass
+                if "original_prompt" in cols and m_row["original_prompt"]:
+                    msg["original_prompt"] = m_row["original_prompt"]
+                messages.append(msg)
+            threads[thread_id] = messages
+    return threads
+
+def save_chat_thread(thread_id, title):
+    project_root = Path(__file__).parent.parent.parent
+    db_path = project_root / 'hr_data.db'
+    with sqlite3.connect(db_path) as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO chat_threads (thread_id, title)
+            VALUES (?, ?)
+            ON CONFLICT(thread_id) DO UPDATE SET
+                title = excluded.title,
+                updated_at = CURRENT_TIMESTAMP
+        """, (thread_id, title))
+        conn.commit()
+
+def save_chat_message(thread_id, msg):
+    project_root = Path(__file__).parent.parent.parent
+    db_path = project_root / 'hr_data.db'
+    with sqlite3.connect(db_path) as conn:
+        cursor = conn.cursor()
+        
+        # Detect existing columns in table
+        cursor.execute("PRAGMA table_info(chat_messages)")
+        cols = {col[1] for col in cursor.fetchall()}
+        
+        # Prepare fields dynamically
+        fields = {
+            "thread_id": thread_id,
+            "role": msg.get("role"),
+            "content": msg.get("content")
+        }
+        
+        # Add optional fields if they are in columns
+        optional_fields = {
+            "intent": msg.get("intent"),
+            "html_after": msg.get("html_after"),
+            "attachment_bytes": msg.get("attachment_bytes"),
+            "attachment_name": msg.get("attachment_name"),
+            "attachment_size": msg.get("attachment_size"),
+            "hide_default_buttons": 1 if msg.get("hide_default_buttons") else 0 if "hide_default_buttons" in msg else None,
+            "options": json.dumps(msg.get("options")) if msg.get("options") is not None else None,
+            "original_prompt": msg.get("original_prompt")
+        }
+        for field_name, val in optional_fields.items():
+            if field_name in cols:
+                fields[field_name] = val
+                
+        # If 'seq' is a column, we must calculate and provide it to prevent NOT NULL constraint errors
+        if "seq" in cols:
+            cursor.execute("SELECT COUNT(*) FROM chat_messages WHERE thread_id = ?", (thread_id,))
+            seq_val = cursor.fetchone()[0]
+            fields["seq"] = seq_val
+            
+        # If 'created_at' is a column, we must provide a default value (like ISO timestamp) if it is NOT NULL
+        if "created_at" in cols:
+            import datetime
+            fields["created_at"] = datetime.datetime.utcnow().isoformat()
+            
+        # Build the dynamic SQL insert statement
+        columns_str = ", ".join(fields.keys())
+        placeholders_str = ", ".join(["?"] * len(fields))
+        values = tuple(fields.values())
+        
+        sql = f"INSERT INTO chat_messages ({columns_str}) VALUES ({placeholders_str})"
+        cursor.execute(sql, values)
+        
+        # Update thread's updated_at timestamp
+        cursor.execute("""
+            UPDATE chat_threads 
+            SET updated_at = CURRENT_TIMESTAMP 
+            WHERE thread_id = ?
+        """, (thread_id,))
+        
+        conn.commit()
+
+def delete_chat_thread(thread_id):
+    project_root = Path(__file__).parent.parent.parent
+    db_path = project_root / 'hr_data.db'
+    with sqlite3.connect(db_path) as conn:
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM chat_messages WHERE thread_id = ?", (thread_id,))
+        cursor.execute("DELETE FROM chat_threads WHERE thread_id = ?", (thread_id,))
+        conn.commit()
+
+def append_and_save_message(thread_id, msg):
+    if thread_id not in st.session_state.threads:
+        st.session_state.threads[thread_id] = []
+    st.session_state.threads[thread_id].append(msg)
+    save_chat_message(thread_id, msg)
+
+init_chat_db()
+
 if "threads" not in st.session_state:
-    st.session_state.threads = {}
+    st.session_state.threads = load_chat_threads()
 if "active_thread_id" not in st.session_state:
-    st.session_state.active_thread_id = None
+    if st.session_state.threads:
+        st.session_state.active_thread_id = list(st.session_state.threads.keys())[0]
+    else:
+        st.session_state.active_thread_id = None
 if "pending_query" not in st.session_state:
     st.session_state.pending_query = None
 if "sidebar_collapsed" not in st.session_state:
@@ -50,10 +234,19 @@ PLOTLY_CONFIG = {"displayModeBar": False, "responsive": True}
 def _cached_docx(content: str) -> bytes:
     return create_mitigation_docx(content)
 
+# Bump this when PDF engine changes so Streamlit cache drops old WeasyPrint failures.
+_PDF_ENGINE = "fpdf2-v2"
+
 @st.cache_data(show_spinner=False)
-def _cached_exec_pdf(metrics_json: str, inference_text: str) -> bytes:
-    metrics = pd.read_json(StringIO(metrics_json))
-    return generate_executive_pdf(metrics, inference_text)
+def _cached_exec_pdf(df_json: str, engine_version: str = _PDF_ENGINE) -> bytes:
+    """Cache executive PDF by roster fingerprint (JSON)."""
+    roster = pd.read_json(StringIO(df_json))
+    return generate_executive_pdf(roster)
+
+
+def _make_exec_pdf(df: pd.DataFrame) -> bytes:
+    """Generate executive PDF (cached, fpdf2 — no GTK)."""
+    return _cached_exec_pdf(df.to_json(orient="records"), _PDF_ENGINE)
 
 def _build_macro_metrics(df: pd.DataFrame):
     def get_top_driver(series):
@@ -633,7 +826,7 @@ def render_header():
         height: 100% !important;
         overflow-y: auto !important;
         overflow-x: hidden !important;
-        padding: 12px 10px 32px 10px !important;
+        padding: 12px 10px 120px 10px !important; /* Increased bottom padding */
         gap: 24px !important;
     }
 
@@ -1278,10 +1471,14 @@ def render_sidebar(col_nav):
             ''', unsafe_allow_html=True)
 
 def render_risk_overview(df):
+    if df is None or df.empty:
+        st.info("No employee records to display for this view.")
+        return
+
     kpi_col1, kpi_col2, kpi_col3 = st.columns(3)
     total_emp = len(df)
     high_risk = len(df[df['RiskPercentage'] > 75])
-    avg_risk = df['RiskPercentage'].mean()
+    avg_risk = float(pd.to_numeric(df['RiskPercentage'], errors="coerce").mean() or 0)
 
     # Column 1 Example (Total Employees)
     kpi_col1.markdown(f'''
@@ -1487,8 +1684,14 @@ def render_risk_overview(df):
 
 def render_top_drivers(df):
     st.markdown("#### **Top Attrition Drivers Distribution**")
+    if df is None or df.empty:
+        st.info("No employee records to display for this view.")
+        return
 
     drivers = pd.concat([df['Driver1'], df['Driver2'], df['Driver3']]).dropna()
+    if drivers.empty:
+        st.info("No driver data available for the current employee set.")
+        return
     driver_counts = drivers.value_counts().reset_index()
     driver_counts.columns = ['Driver', 'Count']
 
@@ -1505,8 +1708,17 @@ def render_top_drivers(df):
 
 def render_high_risk_roster(df):
     st.markdown("#### **High Risk Roster (Action Required)**")
+    if df is None or df.empty:
+        st.info("No employee records to display for this view.")
+        return
     with st.container(border=True):
         high_risk_df = df[df['RiskPercentage'] > 75].sort_values('RiskPercentage', ascending=False).head(20)
+        if high_risk_df.empty:
+            st.info("No employees above 75% flight risk in the current filtered set.")
+            return
+        # Header ~38px + ~35px per row; cap for long lists so the page stays scrollable
+        n_rows = len(high_risk_df)
+        table_height = min(38 + n_rows * 35, 400)
         st.dataframe(
             high_risk_df[['EmployeeID', 'Department', 'Role', 'RiskPercentage', 'Driver1', 'MonthlyHours']],
             column_config={
@@ -1514,7 +1726,7 @@ def render_high_risk_roster(df):
                 "RiskPercentage": st.column_config.ProgressColumn(
                     "Flight Risk",
                     help="Predicted probability of attrition",
-                    format="%f%%",
+                    format="%.1f%%",
                     min_value=0,
                     max_value=100,
                 ),
@@ -1525,11 +1737,142 @@ def render_high_risk_roster(df):
             },
             hide_index=True,
             use_container_width=True,
-            height=400
+            height=table_height,
         )
+
+
+def search_employees(df: pd.DataFrame, query: str) -> pd.DataFrame:
+    """
+    Filter the roster by free-text search across ID, dept, role, drivers, and risk cues.
+    Text + risk filters are combined with AND when both are present.
+    """
+    import re
+
+    q = (query or "").strip()
+    if not q or df.empty:
+        return df.iloc[0:0].copy()
+
+    work = df.copy()
+    if "RiskPercentage" in work.columns:
+        work["RiskPercentage"] = pd.to_numeric(work["RiskPercentage"], errors="coerce")
+
+    q_lower = q.lower()
+    risk_mask = pd.Series(False, index=work.index)
+    text_mask = pd.Series(False, index=work.index)
+    has_risk_filter = False
+    has_text_filter = False
+
+    if any(tok in q_lower for tok in ("high risk", "high-risk", "flight risk")):
+        risk_mask |= work["RiskPercentage"] > 75
+        has_risk_filter = True
+    if "critical" in q_lower:
+        risk_mask |= work["RiskPercentage"] > 80
+        has_risk_filter = True
+    if "low risk" in q_lower or "low-risk" in q_lower:
+        risk_mask |= work["RiskPercentage"] <= 25
+        has_risk_filter = True
+
+    for m in re.finditer(r"(>=|<=|>|<)\s*(\d+(?:\.\d+)?)", q_lower):
+        op, val = m.group(1), float(m.group(2))
+        col = work["RiskPercentage"]
+        if op == ">":
+            risk_mask |= col > val
+        elif op == ">=":
+            risk_mask |= col >= val
+        elif op == "<":
+            risk_mask |= col < val
+        elif op == "<=":
+            risk_mask |= col <= val
+        has_risk_filter = True
+
+    if "EmployeeID" in work.columns:
+        emp_ids_lower = work["EmployeeID"].astype(str).str.lower()
+        for emp_tok in re.findall(r"emp\d+", q_lower):
+            text_mask |= emp_ids_lower == emp_tok
+            has_text_filter = True
+
+    text_cols = [
+        c
+        for c in ("EmployeeID", "Department", "Role", "Driver1", "Driver2", "Driver3")
+        if c in work.columns
+    ]
+    if text_cols:
+        haystack = work[text_cols].astype(str).agg(" ".join, axis=1).str.lower()
+        tokens = [
+            t
+            for t in re.split(r"\s+", q_lower)
+            if t
+            and t not in {"high", "risk", "low", "critical", "flight", ">", "<", ">=", "<="}
+            and not re.fullmatch(r"[><]=?\d+(?:\.\d+)?", t)
+            and not re.fullmatch(r"emp\d+", t)
+        ]
+        if tokens:
+            token_mask = pd.Series(True, index=work.index)
+            for tok in tokens:
+                token_mask &= haystack.str.contains(re.escape(tok), na=False)
+            text_mask |= token_mask
+            has_text_filter = True
+        elif not has_text_filter and not has_risk_filter:
+            text_mask |= haystack.str.contains(re.escape(q_lower), na=False)
+            has_text_filter = True
+
+    if has_risk_filter and has_text_filter:
+        mask = risk_mask & text_mask
+    elif has_risk_filter:
+        mask = risk_mask
+    else:
+        mask = text_mask
+
+    result = work.loc[mask].copy()
+    if "RiskPercentage" in result.columns and not result.empty:
+        result = result.sort_values("RiskPercentage", ascending=False)
+    return result
+
+
+def _clear_dashboard_search() -> None:
+    """Reset search widget state (runs via button on_click before next render)."""
+    st.session_state.dash_search = ""
+    st.session_state.pop("_dash_search_active", None)
+
+
+def apply_dashboard_search(df: pd.DataFrame, query: str) -> pd.DataFrame:
+    """Return full roster when search is empty; otherwise matched employees."""
+    q = (query or "").strip()
+    if not q:
+        return df
+    return search_employees(df, q)
+
+
+def render_search_filter_banner(query: str, match_count: int, total_count: int) -> None:
+    """Show active search scope across analytics tabs."""
+    left, right = st.columns([5, 1])
+    with left:
+        st.markdown(
+            f"""
+            <div style="background: rgba(124, 58, 237, 0.12); border: 1px solid rgba(167, 139, 250, 0.35);
+                        border-radius: 10px; padding: 10px 14px; margin-bottom: 12px;">
+                <span style="color:#A78BFA; font-weight:600;">🔍 Search active:</span>
+                <span style="color:#E2E8F0;"> “{query}”</span>
+                <span style="color:#94A3B8;"> — showing {match_count} of {total_count} employees across this analytics view</span>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with right:
+        st.button(
+            "Clear",
+            key="clear_dash_search",
+            use_container_width=True,
+            on_click=_clear_dashboard_search,
+            help="Reset to the full employee dashboard",
+        )
+
 
 def render_executive_summary(df, slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, target_email):
     import plotly.graph_objects as go
+    if df is None or df.empty:
+        st.info("No employee records to display for this view.")
+        return
     st.markdown("## 📊 Boardroom Briefing: Attrition Risk Assessment")
     st.markdown("<p style='color: #94A3B8; font-size: 1.05rem; margin-bottom: 24px;'>Executive overview of predicted flight risks, business impact, and AI-recommended interventions.</p>", unsafe_allow_html=True)
 
@@ -1581,46 +1924,27 @@ def render_executive_summary(df, slack_url, smtp_host, smtp_port, smtp_user, smt
 
     # 3. Priority Action Center
     st.markdown("### ⚡ Priority Action Center")
-    pac1, pac2, pac3 = st.columns(3)
-    with pac1:
-        st.markdown("""<div style='background: #1E293B; border: 1px solid #334155; padding: 20px; border-radius: 8px; border-top: 4px solid #EF4444; margin-bottom: 16px;'>
-            <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;'>
-                <span style='font-size: 20px;'>💰</span>
-                <span style='background: rgba(239, 68, 68, 0.15); color: #FCA5A5; font-size: 0.75rem; padding: 4px 8px; border-radius: 12px; font-weight: 600;'>Critical</span>
-            </div>
-            <h4 style='color: #F8FAFC; margin: 0 0 8px 0; font-size: 1.1rem;'>Salary Review</h4>
-            <p style='color: #94A3B8; font-size: 0.9rem; margin-bottom: 16px;'>18 top-performers currently sit below the 50th percentile of their compensation band.</p>
-            <span class="pac-btn" style="display:none;"></span>
-        </div>""", unsafe_allow_html=True)
-        if st.button("✨ Ask AI\nView affected employees", key="pac_btn_1", use_container_width=True):
-            st.session_state.pending_query = "Show me the top-performing employees whose salary is below the 50th percentile."
-            st.session_state.ai_action_triggered = True
-    with pac2:
-        st.markdown("""<div style='background: #1E293B; border: 1px solid #334155; padding: 20px; border-radius: 8px; border-top: 4px solid #F59E0B; margin-bottom: 16px;'>
-            <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;'>
-                <span style='font-size: 20px;'>📈</span>
-                <span style='background: rgba(245, 158, 11, 0.15); color: #FCD34D; font-size: 0.75rem; padding: 4px 8px; border-radius: 12px; font-weight: 600;'>High</span>
-            </div>
-            <h4 style='color: #F8FAFC; margin: 0 0 8px 0; font-size: 1.1rem;'>Promotion Review</h4>
-            <p style='color: #94A3B8; font-size: 0.9rem; margin-bottom: 16px;'>12 critical engineers have surpassed 24 months without a title advancement.</p>
-            <span class="pac-btn" style="display:none;"></span>
-        </div>""", unsafe_allow_html=True)
-        if st.button("✨ Ask AI\nReview candidates", key="pac_btn_2", use_container_width=True):
-            st.session_state.pending_query = "List the critical engineers who have surpassed 24 months without a promotion."
-            st.session_state.ai_action_triggered = True
-    with pac3:
-        st.markdown("""<div style='background: #1E293B; border: 1px solid #334155; padding: 20px; border-radius: 8px; border-top: 4px solid #3B82F6; margin-bottom: 16px;'>
-            <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;'>
-                <span style='font-size: 20px;'>🤝</span>
-                <span style='background: rgba(59, 130, 246, 0.15); color: #93C5FD; font-size: 0.75rem; padding: 4px 8px; border-radius: 12px; font-weight: 600;'>Moderate</span>
-            </div>
-            <h4 style='color: #F8FAFC; margin: 0 0 8px 0; font-size: 1.1rem;'>Manager Intervention</h4>
-            <p style='color: #94A3B8; font-size: 0.9rem; margin-bottom: 16px;'>Operations unit shows widespread burnout indicators. Schedule 1:1 check-ins.</p>
-            <span class="pac-btn" style="display:none;"></span>
-        </div>""", unsafe_allow_html=True)
-        if st.button("✨ Ask AI\nAlert managers", key="pac_btn_3", use_container_width=True):
-            st.session_state.pending_query = "Draft an alert to Operations managers to schedule 1:1 check-ins addressing burnout."
-            st.session_state.ai_action_triggered = True
+    pac_cols = st.columns(3)
+    
+    from src.automation.report_engine import generate_hr_recommendations
+    recs = generate_hr_recommendations(df)
+    
+    for i, col in enumerate(pac_cols):
+        if i < len(recs):
+            rec = recs[i]
+            with col:
+                st.markdown(f"""<div style='background: #1E293B; border: 1px solid #334155; padding: 20px; border-radius: 8px; border-top: 4px solid {rec['color']}; margin-bottom: 16px;'>
+                    <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;'>
+                        <span style='font-size: 20px;'>{rec['icon']}</span>
+                        <span style='background: {rec['bg_color']}; color: {rec['text_color']}; font-size: 0.75rem; padding: 4px 8px; border-radius: 12px; font-weight: 600;'>{rec['tag']}</span>
+                    </div>
+                    <h4 style='color: #F8FAFC; margin: 0 0 8px 0; font-size: 1.1rem;'>{rec['short_title']}</h4>
+                    <p style='color: #94A3B8; font-size: 0.9rem; margin-bottom: 16px;'>{rec['description']}</p>
+                    <span class="pac-btn" style="display:none;"></span>
+                </div>""", unsafe_allow_html=True)
+                if st.button(f"✨ Ask AI\nExplore {rec['short_title']}", key=f"pac_btn_{i}", use_container_width=True):
+                    st.session_state.pending_query = rec['query']
+                    st.session_state.ai_action_triggered = True
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -1727,31 +2051,21 @@ def render_executive_summary(df, slack_url, smtp_host, smtp_port, smtp_user, smt
 
     # 8. Generated Recommendations
     st.markdown("### 📋 AI-Generated HR Recommendations")
-    st.markdown("""
-    <div style="background: #1E293B; border: 1px solid #334155; border-radius: 8px; margin-bottom: 24px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid #334155;">
-            <div>
-                <h5 style="color: #F8FAFC; margin: 0 0 4px 0; font-size: 1rem;">Mid-Cycle Salary Calibration for Core Engineers</h5>
-                <p style="color: #94A3B8; margin: 0; font-size: 0.85rem;">Affected: 14 Employees | Est. Cost: $115k | Retention Prob: +42%</p>
-            </div>
-            <div style="background: rgba(16, 185, 129, 0.15); color: #10B981; padding: 4px 10px; border-radius: 4px; font-weight: 600; font-size: 0.85rem;">92% Confidence</div>
-        </div>
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid #334155;">
-            <div>
-                <h5 style="color: #F8FAFC; margin: 0 0 4px 0; font-size: 1rem;">Operations Manager Rotation Program</h5>
-                <p style="color: #94A3B8; margin: 0; font-size: 0.85rem;">Affected: 8 Employees | Est. Cost: $0 | Retention Prob: +28%</p>
-            </div>
-            <div style="background: rgba(16, 185, 129, 0.15); color: #10B981; padding: 4px 10px; border-radius: 4px; font-weight: 600; font-size: 0.85rem;">88% Confidence</div>
-        </div>
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px;">
-            <div>
-                <h5 style="color: #F8FAFC; margin: 0 0 4px 0; font-size: 1rem;">Accelerated Promo Track for Junior Sales</h5>
-                <p style="color: #94A3B8; margin: 0; font-size: 0.85rem;">Affected: 5 Employees | Est. Cost: $40k | Retention Prob: +55%</p>
-            </div>
-            <div style="background: rgba(245, 158, 11, 0.15); color: #F59E0B; padding: 4px 10px; border-radius: 4px; font-weight: 600; font-size: 0.85rem;">74% Confidence</div>
-        </div>
+    
+    html_recs = ""
+    for idx, rec in enumerate(recs):
+        border_style = "border-bottom: 1px solid #334155;" if idx < len(recs) - 1 else ""
+        html_recs += f"""<div style="display: flex; justify-content: space-between; align-items: center; padding: 16px; {border_style}">
+    <div>
+        <h5 style="color: #F8FAFC; margin: 0 0 4px 0; font-size: 1rem;">{rec['title']}</h5>
+        <p style="color: #94A3B8; margin: 0; font-size: 0.85rem;">Affected: {rec['affected']} Employees | Est. Cost: ${rec['cost']:,.0f} | Retention Prob: {rec['retention_prob']}</p>
     </div>
-    """, unsafe_allow_html=True)
+    <div style="background: rgba(16, 185, 129, 0.15); color: #10B981; padding: 4px 10px; border-radius: 4px; font-weight: 600; font-size: 0.85rem;">{rec['confidence']} Confidence</div>
+</div>"""
+        
+    st.markdown(f"""<div style="background: #1E293B; border: 1px solid #334155; border-radius: 8px; margin-bottom: 24px;">
+{html_recs}
+</div>""", unsafe_allow_html=True)
     if st.session_state.get('generating_exec_plan'):
         st.markdown("""
         <div style="background: #111827; border: 1px solid rgba(139, 92, 246, 0.4); padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); margin-bottom: 16px;">
@@ -1856,6 +2170,17 @@ def render_executive_summary(df, slack_url, smtp_host, smtp_port, smtp_user, smt
         )
 
     # Inference Alert Card
+    dept_risk = df.groupby('Department')['RiskPercentage'].mean().sort_values(ascending=False)
+    top_2_depts = dept_risk.index[:2].tolist() if len(dept_risk) >= 2 else (dept_risk.index.tolist() + ["", ""])
+    high_risk_df = df[df['RiskPercentage'] > 75]
+    predicted_attrition = len(high_risk_df)
+    top_2_share = len(high_risk_df[high_risk_df['Department'].isin(top_2_depts)]) / max(predicted_attrition, 1) * 100
+    
+    inference_text = (
+        f"The current organizational risk profile is elevated (Avg Risk: {avg_risk:.1f}%). "
+        f"{top_2_depts[0]} and {top_2_depts[1]} collectively account for {top_2_share:.0f}% of projected voluntary attrition. "
+        f"Targeted manager interventions and salary calibrations in these units are expected to reduce projected resignations by approximately 38%."
+    )
     st.markdown(f'''
     <div style="
         background: linear-gradient(90deg, rgba(239, 68, 68, 0.1) 0%, rgba(11, 14, 20, 0.4) 100%);
@@ -1880,14 +2205,9 @@ def render_executive_summary(df, slack_url, smtp_host, smtp_port, smtp_user, smt
     st.markdown("<div style='border-top: 1px solid #334155; margin-bottom: 24px;'></div>", unsafe_allow_html=True)
     rdc1, rdc2, rdc3, rdc4 = st.columns(4)
 
-    # PDF Export
-    metrics_json = macro_metrics.to_json(orient="records")
+    # PDF Export (fpdf2 — no WeasyPrint/GTK)
     try:
-        # Try main or fallback PDF generator
-        if '_cached_exec_pdf' in globals():
-            pdf_bytes = _cached_exec_pdf(metrics_json, inference_text)
-        else:
-            pdf_bytes = generate_executive_pdf(df)
+        pdf_bytes = _make_exec_pdf(df)
         can_export = True
         pdf_err = ""
     except Exception as e:
@@ -1918,10 +2238,12 @@ def render_executive_summary(df, slack_url, smtp_host, smtp_port, smtp_user, smt
             st.button("📧 Email HR Contact", use_container_width=True, key="rdc_email_disabled", disabled=True, help="⚠️ Target Email is missing. Open the Configuration tab (⚙️) to set your recipient email.")
         else:
             if st.button("📧 Email HR Contact", use_container_width=True, key="rdc_email"):
-                if '_cached_exec_pdf' in globals():
-                    pdf_bytes_to_send = _cached_exec_pdf(metrics_json, inference_text)
-                else:
-                    pdf_bytes_to_send = pdf_bytes
+                pdf_bytes_to_send = pdf_bytes
+                if pdf_bytes_to_send is None:
+                    try:
+                        pdf_bytes_to_send = _make_exec_pdf(df)
+                    except Exception:
+                        pdf_bytes_to_send = None
                 if pdf_bytes_to_send:
                     success = send_manager_email(
                         target_email=target_email,
@@ -2004,21 +2326,26 @@ def render_configuration(slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, 
 
 def render_dashboard(col_dash, df, slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, target_email):
     with col_dash:
+        # Honor pending clear BEFORE reading/creating the search widget
+        if st.session_state.pop("_clear_dash_search", False):
+            st.session_state.dash_search = ""
+
+        search_query = (st.session_state.get("dash_search") or "").strip()
+        view_df = apply_dashboard_search(df, search_query)
+
         with st.container(border=False):
                 st.markdown('<div style="padding-right: 20px;">', unsafe_allow_html=True)
                 st.markdown("## **Organizational Risk Dashboard**")
                 st.markdown("<p style='color: #94A3B8; font-size: 0.9rem; margin-bottom: 24px;'>Real-time insights and predictive flight risk metrics.</p>", unsafe_allow_html=True)
                 
                 # Toolbar
-                tb_col1, tb_col2, tb_col3, tb_col4 = st.columns([4, 1.2, 1.8, 1.2], gap="small")
+                tb_col1, tb_col2, tb_col3 = st.columns([4, 1.8, 1.2], gap="small")
                 with tb_col1:
                     st.text_input("Search...", label_visibility="collapsed", placeholder="🔍 Search employee database...", key="dash_search")
                 with tb_col2:
-                    st.button("🎛 Filters", use_container_width=True)
-                with tb_col3:
                     with st.popover("📥 Ingest Roster Data", use_container_width=True):
                         st.markdown("### **Upload Fresh HR Records**")
-                        st.markdown("<p style='color: #64748B; font-size: 0.85rem;'>Select a CSV or Excel file to update the platform core analytics database schema.</p>", unsafe_allow_html=True)
+                        st.markdown("<p style='color: #64748B; font-size: 0.85rem;'>Upload a CSV/Excel roster. The platform will ingest employees and recompute RiskPercentage + SHAP drivers with the live XGBoost model.</p>", unsafe_allow_html=True)
                         uploaded_file = st.file_uploader("Choose file", type=["csv", "xlsx"], label_visibility="collapsed")
                         
                         if uploaded_file is not None:
@@ -2029,59 +2356,56 @@ def render_dashboard(col_dash, df, slack_url, smtp_host, smtp_port, smtp_user, s
                                         new_df = pd.read_csv(uploaded_file)
                                     else:
                                         new_df = pd.read_excel(uploaded_file)
-                                    
-                                    with st.spinner("Syncing to core database..."):
+
+                                    with st.spinner("Ingesting roster and running live XGBoost + SHAP scoring..."):
                                         project_root = Path(__file__).parent.parent.parent
-                                        db_path = project_root / 'hr_data.db'
-                                        with sqlite3.connect(db_path) as conn:
-                                            core_cols = ['EmployeeID', 'Tenure', 'Department', 'Role', 'MonthlyHours', 'LastPromotion', 'Salary', 'Attrition']
-                                            emp_df = new_df[[c for c in core_cols if c in new_df.columns]]
-                                            emp_df.to_sql('employees', conn, if_exists='replace', index=False)
-                                            
-                                            ml_cols = ['EmployeeID', 'RiskPercentage', 'Driver1', 'Driver2', 'Driver3']
-                                            if 'RiskPercentage' in new_df.columns:
-                                                ml_df = new_df[[c for c in ml_cols if c in new_df.columns]]
-                                                ml_df.to_sql('attrition_scores', conn, if_exists='replace', index=False)
-                                        
-                                        # Clear only data cache (not all caches)
-                                        load_risk_data.clear()
-                                        _chart_aggregates.clear()
-                                        _cached_exec_pdf.clear()
-                                        
-                                    st.session_state.last_uploaded = file_key
-                                    st.session_state.pop("_dash_pdf_bytes", None)
-                                    st.session_state.pop("_exec_pdf_bytes", None)
-                                    st.success("Database synced successfully! 🚀")
+                                        db_path = project_root / "hr_data.db"
+                                        try:
+                                            scores = ingest_and_score(new_df, db_path=db_path)
+                                            st.cache_data.clear()
+                                            st.session_state.last_uploaded = file_key
+                                            st.success(
+                                                f"Synced {len(new_df)} employees and scored {len(scores)} with live model + SHAP."
+                                            )
+                                        except Exception as e:
+                                            st.error(f"Failed to ingest/score data: {e}")
                                     st.rerun()
                                 except Exception as e:
-                                    st.error(f"Failed to ingest data: {e}")
+                                    st.error(f"Failed to ingest/score data: {e}")
                             else:
                                 st.success("Database synced successfully! 🚀")
                 
-                with tb_col4:
-                    @st.cache_data(show_spinner=False)
-                    def get_cached_pdf(current_df):
-                        try:
-                            metrics, inf_text = _build_macro_metrics(current_df)
-                            return _cached_exec_pdf(metrics.to_json(orient="records"), inf_text)
-                        except Exception as e:
-                            raise RuntimeError(f"Failed to generate PDF: {e}")
-
+                with tb_col3:
                     export_error = None
                     pdf_bytes = None
+                    # Export reflects current dashboard filter (full roster when search is empty)
+                    export_df = view_df if not view_df.empty else df
+                    export_name = (
+                        "dashboard_export_filtered.pdf"
+                        if search_query and not view_df.empty
+                        else "dashboard_export.pdf"
+                    )
                     try:
-                        pdf_bytes = get_cached_pdf(df)
+                        if search_query and view_df.empty:
+                            export_error = "No employees match the current search — clear search or adjust the keyword to export."
+                        else:
+                            pdf_bytes = _make_exec_pdf(export_df)
                     except Exception as e:
-                        export_error = str(e)
+                        export_error = f"Failed to generate PDF: {e}"
 
                     if pdf_bytes:
                         st.download_button(
                             "📤 Export",
                             data=pdf_bytes,
-                            file_name="dashboard_export.pdf",
+                            file_name=export_name,
                             mime="application/pdf",
                             use_container_width=True,
                             key="tb_export",
+                            help=(
+                                f"Exports the current filtered view ({len(export_df)} employees)"
+                                if search_query
+                                else f"Exports the full dashboard ({len(export_df)} employees)"
+                            ),
                         )
                     elif export_error:
                         st.button(
@@ -2089,7 +2413,7 @@ def render_dashboard(col_dash, df, slack_url, smtp_host, smtp_port, smtp_user, s
                             use_container_width=True,
                             disabled=True,
                             key="tb_export_disabled",
-                            help=f"PDF export unavailable: {export_error}",
+                            help=export_error,
                         )
                 
                 st.markdown("<div style='margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.05);'></div>", unsafe_allow_html=True)
@@ -2097,24 +2421,158 @@ def render_dashboard(col_dash, df, slack_url, smtp_host, smtp_port, smtp_user, s
                 if "active_navigation" not in st.session_state:
                     st.session_state.active_navigation = "📊 Risk Overview"
 
-        if st.session_state.active_navigation == "📊 Risk Overview":
-            render_risk_overview(df)
-        elif st.session_state.active_navigation == "🎯 Top Drivers":
-            render_top_drivers(df)
-        elif st.session_state.active_navigation == "📋 High Risk Roster":
-            render_high_risk_roster(df)
-        elif st.session_state.active_navigation == "⚙️ Executive Summary":
-            render_executive_summary(df, slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, target_email)
-        elif st.session_state.active_navigation == "⚙️ Configuration":
+        nav = st.session_state.get("active_navigation", "📊 Risk Overview")
+
+        # Configuration is global settings — do not apply employee search filter there
+        if nav == "⚙️ Configuration":
             render_configuration(slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, target_email)
+            return
+
+        if search_query:
+            render_search_filter_banner(search_query, len(view_df), len(df))
+            if view_df.empty:
+                st.warning(
+                    "No employees matched that search. Try an ID, department, role, "
+                    "`high risk`, or `>75` — or clear the search."
+                )
+                return
+
+        if nav == "📊 Risk Overview":
+            render_risk_overview(view_df)
+        elif nav == "🎯 Top Drivers":
+            render_top_drivers(view_df)
+        elif nav == "📋 High Risk Roster":
+            render_high_risk_roster(view_df)
+        elif nav == "⚙️ Executive Summary":
+            render_executive_summary(
+                view_df, slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, target_email
+            )
 
 def render_chat_panel(col_chat, df, slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, target_email):
     with col_chat:
-        # Render Header and Tabs
-        has_recent = "threads" in st.session_state and len(st.session_state.threads) > 1
-        recent_style = "color: #94A3B8; cursor: pointer;" if has_recent else "color: #475569; cursor: not-allowed; opacity: 0.5;"
-        recent_title_attr = "" if has_recent else 'title="No recent conversations..."'
+        # Initialize active_chat_tab
+        if "active_chat_tab" not in st.session_state:
+            st.session_state.active_chat_tab = "Chat"
 
+        # Inject CSS styles
+        st.markdown("""
+        <style>
+        /* Chat Tab Buttons styling */
+        div.stButton > button[key="chat_tab_btn"],
+        div.stButton > button[key="recent_chats_tab_btn"] {
+            background: transparent !important;
+            border: none !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            font-weight: 600 !important;
+            font-size: 0.9rem !important;
+            padding: 8px 12px !important;
+            width: 100% !important;
+            text-align: center !important;
+            margin: 0 !important;
+            height: auto !important;
+            min-height: 0 !important;
+            transition: all 0.2s ease !important;
+        }
+        /* New chat button */
+        div.stButton > button[key="new_chat_btn"] {
+            background: rgba(124, 58, 237, 0.1) !important;
+            border: 1px solid rgba(124, 58, 237, 0.2) !important;
+            color: #A78BFA !important;
+            border-radius: 12px !important;
+            padding: 8px 12px !important;
+            margin-bottom: 16px !important;
+            font-weight: 600 !important;
+            width: 100% !important;
+            box-shadow: none !important;
+        }
+        div.stButton > button[key="new_chat_btn"]:hover {
+            background: rgba(124, 58, 237, 0.2) !important;
+            border-color: rgba(124, 58, 237, 0.4) !important;
+            color: #FFFFFF !important;
+        }
+        /* Recent Chat Item Buttons */
+        div.stButton > button[key^="recent_item_"] {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            padding: 12px 16px !important;
+            border-radius: 12px !important;
+            background: rgba(255, 255, 255, 0.03) !important;
+            border: 1px solid rgba(255, 255, 255, 0.05) !important;
+            color: #E2E8F0 !important;
+            font-size: 0.85rem !important;
+            margin-bottom: 8px !important;
+            width: 100% !important;
+            text-align: left !important;
+            height: auto !important;
+            min-height: 0 !important;
+            transition: all 0.2s ease !important;
+            box-shadow: none !important;
+        }
+        div.stButton > button[key^="recent_item_"]:hover {
+            background: rgba(255, 255, 255, 0.05) !important;
+            color: #FFFFFF !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+            transform: translateY(-1px) !important;
+        }
+        div.stButton > button[key^="recent_item_"] p {
+            margin: 0 !important;
+            width: 100% !important;
+            text-align: left !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+        /* Delete buttons */
+        div.stButton > button[key^="delete_item_"] {
+            background: rgba(239, 68, 68, 0.05) !important;
+            border: 1px solid rgba(239, 68, 68, 0.1) !important;
+            color: #EF4444 !important;
+            border-radius: 12px !important;
+            padding: 12px 0 !important;
+            margin-bottom: 8px !important;
+            width: 100% !important;
+            text-align: center !important;
+            height: auto !important;
+            min-height: 0 !important;
+            box-shadow: none !important;
+        }
+        div.stButton > button[key^="delete_item_"]:hover {
+            background: rgba(239, 68, 68, 0.15) !important;
+            color: #FFFFFF !important;
+            border-color: rgba(239, 68, 68, 0.3) !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
+        active_tab = st.session_state.active_chat_tab
+        if active_tab == "Chat":
+            st.markdown("""
+            <style>
+            div.stButton > button[key="chat_tab_btn"] {
+                border-bottom: 2px solid #A78BFA !important;
+                color: #A78BFA !important;
+            }
+            div.stButton > button[key="recent_chats_tab_btn"] {
+                color: #94A3B8 !important;
+            }
+            </style>
+            """, unsafe_allow_html=True)
+        else:
+            st.markdown("""
+            <style>
+            div.stButton > button[key="chat_tab_btn"] {
+                color: #94A3B8 !important;
+            }
+            div.stButton > button[key="recent_chats_tab_btn"] {
+                border-bottom: 2px solid #A78BFA !important;
+                color: #A78BFA !important;
+            }
+            </style>
+            """, unsafe_allow_html=True)
+
+        # Render Header
         st.markdown(f'''
         <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 4px; padding-bottom: 12px; margin-bottom: 16px; flex-shrink: 0;">
             <div style="display: flex; align-items: center; gap: 8px;">
@@ -2126,31 +2584,80 @@ def render_chat_panel(col_chat, df, slack_url, smtp_host, smtp_port, smtp_user, 
             </div>
             <span style="color: #64748B; cursor: pointer; font-size: 1.2rem;">✕</span>
         </div>
-        
-        <div style="display: flex; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 24px;">
-            <div style="flex: 1; text-align: center; padding: 8px 12px; color: #A78BFA; font-weight: 600; border-bottom: 2px solid #A78BFA; cursor: pointer; font-size: 0.9rem;">Chat</div>
-            <div {recent_title_attr} style="flex: 1; text-align: center; padding: 8px 12px; {recent_style} font-weight: 500; font-size: 0.9rem;">Recent Chats</div>
-        </div>
         ''', unsafe_allow_html=True)
-        
-        if "agent_graph" not in st.session_state:
-            st.markdown('''
-            <div style="background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 24px; text-align: center; margin-top: 20px;">
-                <h4 style="color: #F8FAFC; margin-bottom: 8px;">Agent Offline</h4>
-                <p style="color: #94A3B8; font-size: 0.9rem; margin: 0;">Please connect an AI provider via the <b>Configuration</b> tab in the left sidebar.</p>
-            </div>
-            ''', unsafe_allow_html=True)
+
+        # Render Tab Buttons side-by-side
+        tab_col1, tab_col2 = st.columns(2)
+        with tab_col1:
+            if st.button("Chat", key="chat_tab_btn", use_container_width=True):
+                st.session_state.active_chat_tab = "Chat"
+                st.rerun()
+        with tab_col2:
+            if st.button("Recent Chats", key="recent_chats_tab_btn", use_container_width=True):
+                st.session_state.active_chat_tab = "Recent"
+                st.rerun()
+
+        st.markdown("<div style='border-bottom: 1px solid rgba(255,255,255,0.05); margin-top: -10px; margin-bottom: 16px;'></div>", unsafe_allow_html=True)
+
+        # New Chat button
+        if st.button("➕ New Conversation", key="new_chat_btn", use_container_width=True):
+            st.session_state.active_thread_id = None
+            st.session_state.active_chat_tab = "Chat"
+            st.session_state.pending_query = None
+            st.rerun()
+
+        if active_tab == "Chat":
+            if "agent_graph" not in st.session_state:
+                st.markdown('''
+                <div style="background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 24px; text-align: center; margin-top: 20px;">
+                    <h4 style="color: #F8FAFC; margin-bottom: 8px;">Agent Offline</h4>
+                    <p style="color: #94A3B8; font-size: 0.9rem; margin: 0;">Please connect an AI provider via the <b>Configuration</b> tab in the left sidebar.</p>
+                </div>
+                ''', unsafe_allow_html=True)
+            else:
+                st.markdown('<div class="history-marker" style="display:none"></div>', unsafe_allow_html=True)
+                chat_container = render_chat_history(slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, target_email)
+                render_chat_input(chat_container, df, slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, target_email)
+                # Footer disclaimer
+                st.markdown('''
+                <div class="chat-disclaimer-footer" style="background: rgba(30, 41, 59, 0.4); border-radius: 8px; padding: 10px 12px; display: flex; align-items: flex-start; gap: 8px; color: #94A3B8; font-size: 0.75rem;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 1px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M12 8v4"></path><path d="M12 16h.01"></path></svg>
+                    <span>AI responses may not be 100% accurate. Please verify important insights.</span>
+                </div>
+                ''', unsafe_allow_html=True)
         else:
-            st.markdown('<div class="history-marker" style="display:none"></div>', unsafe_allow_html=True)
-            chat_container = render_chat_history(slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, target_email)
-            render_chat_input(chat_container, df, slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, target_email)
-            # Footer disclaimer
-            st.markdown('''
-            <div class="chat-disclaimer-footer" style="background: rgba(30, 41, 59, 0.4); border-radius: 8px; padding: 10px 12px; display: flex; align-items: flex-start; gap: 8px; color: #94A3B8; font-size: 0.75rem;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 1px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M12 8v4"></path><path d="M12 16h.01"></path></svg>
-                <span>AI responses may not be 100% accurate. Please verify important insights.</span>
-            </div>
-            ''', unsafe_allow_html=True)
+            # Recent tab contents
+            threads = st.session_state.threads
+            if not threads:
+                st.info("No recent conversations yet.")
+            else:
+                recent_container = st.container(border=False)
+                with recent_container:
+                    for tid, msgs in threads.items():
+                        title = "New Conversation"
+                        for m in msgs:
+                            if m["role"] == "user":
+                                title = m["content"]
+                                break
+                        if "<span" in title:
+                            import re
+                            title = re.sub(r'<[^>]*>', '', title)
+                        if len(title) > 30:
+                            title = title[:27] + "..."
+                        
+                        col_item, col_delete = st.columns([5, 1])
+                        with col_item:
+                            if st.button(f"💬 {title}", key=f"recent_item_{tid}", use_container_width=True):
+                                st.session_state.active_thread_id = tid
+                                st.session_state.active_chat_tab = "Chat"
+                                st.rerun()
+                        with col_delete:
+                            if st.button("🗑️", key=f"delete_item_{tid}", use_container_width=True, help="Delete conversation"):
+                                delete_chat_thread(tid)
+                                if st.session_state.active_thread_id == tid:
+                                    st.session_state.active_thread_id = None
+                                st.session_state.threads = load_chat_threads()
+                                st.rerun()
 
 def render_chat_history(slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, target_email):
     # Display chat messages from history
@@ -2270,59 +2777,16 @@ def render_chat_history(slack_url, smtp_host, smtp_port, smtp_user, smtp_pass, t
                                     content_clean = msg["content"].replace("*", "")
                                     note_snippet = content_clean[:800] + ("..." if len(content_clean) > 800 else "")
 
-                        with btn_col1:
-                            docx_bytes = create_mitigation_docx(msg["content"])
-                            st.download_button(
-                                label="📥 DOCX",
-                                data=docx_bytes,
-                                file_name=f"chat_export_{idx}.docx",
-                                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                key=f"docx_{idx}",
-                                use_container_width=True
-                            )
-                        with btn_col2:
-                            if st.button("📧 Email", key=f"pdf_{idx}", help="Email to Manager", use_container_width=True):
-                                if not smtp_host or smtp_host == "smtp.example.com":
-                                    st.toast("⚠️ Please configure SMTP settings in the Configuration popover to send emails.", icon="⚠️")
-                                else:
-                                    pdf_bytes = create_mitigation_pdf(msg["content"])
-                                    success = send_manager_email(
-                                        target_email=target_email,
-                                        subject="HR Copilot Action Plan",
-                                        body="Please review the attached plan from the HR Copilot.",
-                                        attachment_bytes=pdf_bytes,
-                                        filename=f"copilot_export_{idx}.pdf",
-                                        smtp_host=smtp_host, smtp_port=smtp_port, smtp_user=smtp_user, smtp_pass=smtp_pass
+                                    success = dispatch_critical_alert(
+                                        webhook_url=slack_url,
+                                        employee_id=employee_id,
+                                        risk_score=risk_score,
+                                        mitigation_note=note_snippet
                                     )
                                     if success:
-                                        st.toast("Email Dispatched Successfully!", icon="✅")
+                                        st.toast("Slack Alert Triggered!", icon="✅")
                                     else:
-                                        st.error("Failed to send email.")
-                        with btn_col3:
-                            if st.button("💬 Slack", key=f"alert_{idx}", help="Send Slack Alert", use_container_width=True):
-                                if not slack_url or not slack_url.startswith("https://hooks.slack.com"):
-                                    st.toast("⚠️ Please configure your Slack Webhook URL in settings.", icon="⚠️")
-                                else:
-                                    import re
-                                    emp_match = re.search(r'EMP\d{4}', msg["content"])
-                                    employee_id = emp_match.group(0) if emp_match else "Multiple / General Insights"
-                                    
-                                    risk_match = re.search(r'(\d{2,3}\.\d)%', msg["content"])
-                                    risk_score = float(risk_match.group(1)) if risk_match else "N/A"
-                                    
-                                    content_clean = msg["content"].replace("*", "")
-                                    note_snippet = content_clean[:800] + ("..." if len(content_clean) > 800 else "")
-
-                        success = dispatch_critical_alert(
-                            webhook_url=slack_url,
-                            employee_id=employee_id,
-                            risk_score=risk_score,
-                            mitigation_note=note_snippet
-                        )
-                        if success:
-                            st.toast("Slack Alert Triggered!", icon="✅")
-                        else:
-                            st.error("Failed to send Slack alert.")
+                                        st.error("Failed to send Slack alert.")
 
                         # Follow-up Chips
                         st.markdown(
@@ -2498,9 +2962,11 @@ def render_chat_input(chat_container, df, slack_url, smtp_host, smtp_port, smtp_
 
     if prompt:
         with chat_container:
+            is_new_thread = False
             if not st.session_state.active_thread_id:
                 st.session_state.active_thread_id = str(uuid.uuid4())
                 st.session_state.threads[st.session_state.active_thread_id] = []
+                is_new_thread = True
                 
             display_prompt = prompt
             if prompt == "__GENERATE_EXEC_PLAN__": display_prompt = "Generate Executive Action Plan"
@@ -2509,7 +2975,12 @@ def render_chat_input(chat_container, df, slack_url, smtp_host, smtp_port, smtp_
             elif prompt == "__SCHEDULE_WEEKLY__": display_prompt = "Schedule weekly report"
 
             st.chat_message("user", avatar="👤").markdown(f"<span class='user-marker' style='display:none'></span>{display_prompt}", unsafe_allow_html=True)
-            st.session_state.threads[st.session_state.active_thread_id].append({"role": "user", "content": display_prompt, "original_prompt": prompt})
+            
+            if is_new_thread:
+                title = display_prompt[:35] + ("..." if len(display_prompt) > 35 else "")
+                save_chat_thread(st.session_state.active_thread_id, title)
+                
+            append_and_save_message(st.session_state.active_thread_id, {"role": "user", "content": display_prompt, "original_prompt": prompt})
 
             with st.chat_message("assistant", avatar="✨"):
                 st.markdown("<span class='assistant-marker' style='display:none'></span>", unsafe_allow_html=True)
@@ -2571,7 +3042,7 @@ def render_chat_input(chat_container, df, slack_url, smtp_host, smtp_port, smtp_
                             # Reset states
                             st.session_state.generating_exec_plan = False
                             # Add a fake user/assistant message to thread so chat history makes sense
-                            st.session_state.threads[st.session_state.active_thread_id].append({
+                            append_and_save_message(st.session_state.active_thread_id, {
                                 "role": "assistant",
                                 "content": "I have successfully generated the Executive Action Plan. You can download it below.",
                                 "intent": "generate_report",
@@ -2607,7 +3078,7 @@ def render_chat_input(chat_container, df, slack_url, smtp_host, smtp_port, smtp_
                             </table>
                         </div>
                         """
-                        st.session_state.threads[st.session_state.active_thread_id].append({
+                        append_and_save_message(st.session_state.active_thread_id, {
                             "role": "assistant",
                             "content": "The Executive Action Plan has been autonomously generated and delivered to the configured HR contact.",
                             "html_after": card_html,
@@ -2641,7 +3112,7 @@ def render_chat_input(chat_container, df, slack_url, smtp_host, smtp_port, smtp_
                             </table>
                         </div>
                         """
-                        st.session_state.threads[st.session_state.active_thread_id].append({
+                        append_and_save_message(st.session_state.active_thread_id, {
                             "role": "assistant",
                             "content": "The Slack announcement has been autonomously dispatched to the #hr-leads channel.",
                             "html_after": card_html,
@@ -2653,7 +3124,7 @@ def render_chat_input(chat_container, df, slack_url, smtp_host, smtp_port, smtp_
                         st.error(f"Slack Dispatch Error: {e}")
                         st.stop()
                 elif prompt == "__SCHEDULE_WEEKLY__":
-                    st.session_state.threads[st.session_state.active_thread_id].append({
+                    append_and_save_message(st.session_state.active_thread_id, {
                         "role": "assistant",
                         "content": "### ✅ Weekly Executive Briefing Scheduled\n\nThe AI Copilot will automatically run the full predictive pipeline and distribute the results.\n\n**Schedule:** Every Monday at 08:00 AM\n**Format:** PDF Dashboard + Editable DOCX Action Plan\n**Recipients:** `CHRO`, `HR Leads`, `COO`\n\nI will notify you here each time a report is generated and sent.",
                         "intent": "schedule_weekly"
@@ -2675,7 +3146,7 @@ def render_chat_input(chat_container, df, slack_url, smtp_host, smtp_port, smtp_
 
                         message_placeholder.markdown(ai_message)
 
-                        st.session_state.threads[st.session_state.active_thread_id].append({
+                        append_and_save_message(st.session_state.active_thread_id, {
                             "role": "assistant", 
                             "content": ai_message,
                             "intent": intent
@@ -2695,16 +3166,37 @@ def render_chat_input(chat_container, df, slack_url, smtp_host, smtp_port, smtp_
 def load_risk_data():
     project_root = Path(__file__).parent.parent.parent
     db_path = project_root / 'hr_data.db'
-    if not db_path.exists():
-        return pd.DataFrame()
     
     with sqlite3.connect(db_path) as conn:
+        # Check if the required table 'employees' exists.
+        # hr_data.db is created early by init_chat_db(), so db_path.exists() is true even if hr_data lacks HR data.
+        cursor = conn.cursor()
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='employees'")
+        if not cursor.fetchone():
+            try:
+                sample_data = project_root / "sample_data" / "synthetic_hr_roster_1000.csv"
+                if sample_data.exists():
+                    new_df = pd.read_csv(sample_data)
+                    core_cols = ['EmployeeID', 'Tenure', 'Department', 'Role', 'MonthlyHours', 'LastPromotion', 'Salary', 'Attrition']
+                    emp_df = new_df[[c for c in core_cols if c in new_df.columns]]
+                    emp_df.to_sql('employees', conn, if_exists='replace', index=False)
+                    
+                    ml_cols = ['EmployeeID', 'RiskPercentage', 'Driver1', 'Driver2', 'Driver3']
+                    ml_df = new_df[[c for c in ml_cols if c in new_df.columns]]
+                    ml_df.to_sql('attrition_scores', conn, if_exists='replace', index=False)
+            except Exception as e:
+                print(f"Auto-restore failed: {e}")
+                return pd.DataFrame()
+
         query = """
             SELECT e.*, a.RiskPercentage, a.Driver1, a.Driver2, a.Driver3 
             FROM employees e 
             LEFT JOIN attrition_scores a ON e.EmployeeID = a.EmployeeID
         """
-        df = pd.read_sql_query(query, conn)
+        try:
+            df = pd.read_sql_query(query, conn)
+        except Exception:
+            return pd.DataFrame()
     return df
 
 def main():
@@ -2713,7 +3205,12 @@ def main():
     # Extract config variables to pass down (using 'or' so empty session state properly falls back to env vars)
     slack_url = st.session_state.get("saved_slack") or os.environ.get("SLACK_WEBHOOK_URL", "")
     smtp_host = st.session_state.get("saved_smtp_host") or os.environ.get("SMTP_HOST", "")
-    smtp_port = int(st.session_state.get("saved_smtp_port") or os.environ.get("SMTP_PORT", 587))
+    # SMTP_PORT may be "" in .env (key present but empty) — treat blank/invalid as 587
+    _raw_port = st.session_state.get("saved_smtp_port") or os.environ.get("SMTP_PORT") or 587
+    try:
+        smtp_port = int(_raw_port)
+    except (TypeError, ValueError):
+        smtp_port = 587
     smtp_user = st.session_state.get("saved_smtp_user") or os.environ.get("SMTP_USER", "")
     smtp_pass = st.session_state.get("saved_smtp_pass") or os.environ.get("SMTP_PASS", "")
     target_email = st.session_state.get("saved_target_email") or os.environ.get("TARGET_EMAIL", "")
