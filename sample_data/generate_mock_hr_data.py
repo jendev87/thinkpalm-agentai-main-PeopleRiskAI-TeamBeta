@@ -83,6 +83,6 @@ def generate_synthetic_hr_roster(num_employees=1000):
     return pd.DataFrame(data)
 
 # Generate and build output paths
-df_mock = generate_synthetic_hr_roster(1250)
-df_mock.to_csv("/Users/thinkpalm/Desktop/Training/Main Project/SampleData/synthetic_hr_roster_1250.csv", index=False)
+df_mock = generate_synthetic_hr_roster(1000)
+df_mock.to_csv("sample_data/synthetic_hr_roster_1000.csv", index=False)
 print(f"Success! Generated a matching manifest with shape: {df_mock.shape}")
